@@ -1,6 +1,6 @@
 {
   "name": "@duxweb/uni-create",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Create a Dux Uni project from the official template.",
   "license": "MIT",
   "type": "module",
@@ -20,8 +20,8 @@
   ],
   "duxTemplate": {
     "templateName": "template",
-    "uniVersion": "0.1.1",
-    "uniProVersion": "0.1.1",
+    "uniVersion": "0.1.2",
+    "uniProVersion": "0.1.2",
     "defaultUi": "pro"
   }
 }
