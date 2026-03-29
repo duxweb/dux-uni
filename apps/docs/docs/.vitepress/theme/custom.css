@@ -1,0 +1,17 @@
+:root {
+  --vp-c-brand-1: #2457f5;
+  --vp-c-brand-2: #1d4ed8;
+  --vp-c-brand-3: #1e40af;
+  --vp-c-sponsor: #2457f5;
+}
+
+.VPHero .text {
+  background: linear-gradient(120deg, #0f172a 0%, #2457f5 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vp-doc code {
+  white-space: pre-wrap;
+}

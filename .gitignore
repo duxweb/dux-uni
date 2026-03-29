@@ -5,4 +5,4 @@ coverage
 .DS_Store
 apps/*/src/pages
 apps/*/src/runtime/generated
-.vitepress
+cache
