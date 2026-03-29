@@ -115,8 +115,8 @@ function createNeutralSemanticValues(color: string, theme: 'light' | 'dark') {
 
 function createBackgroundSemanticValues(base: string, muted: string, theme: 'light' | 'dark') {
   if (theme === 'dark') {
-    const darkBase = mixColor(DARK_CANVAS, base, 0.08)
-    const darkMuted = mixColor(DARK_BACKGROUND_TOP, muted, 0.08)
+    const darkBase = mixColor(DARK_CANVAS, base, 0.06)
+    const darkMuted = mixColor(DARK_BACKGROUND_TOP, muted, 0.06)
 
     return {
       DEFAULT: darkBase,
@@ -177,7 +177,7 @@ function createSurfaceSemanticValues(base: string, muted: string, theme: 'light'
 
 function createChromeSemanticValues(base: string, theme: 'light' | 'dark') {
   if (theme === 'dark') {
-    const darkBase = mixColor(DARK_CANVAS, base, 0.05)
+    const darkBase = mixColor(DARK_CANVAS, base, 0.09)
 
     return {
       DEFAULT: darkBase,
@@ -361,11 +361,11 @@ export function createWotThemeVars(tokens: Partial<DuxThemeTokens> = {}, theme: 
     colorTip: tipColor,
     colorBorder: borderColor,
     colorBorderLight: borderLightColor,
-    colorBg: theme === 'dark' ? darkBackground.muted : nextTokens.backgroundMuted,
+    colorBg: theme === 'dark' ? darkSurface.DEFAULT : nextTokens.backgroundMuted,
     darkBackground: chromeValues.DEFAULT,
-    darkBackground2: darkBackground.DEFAULT,
+    darkBackground2: darkSurface.DEFAULT,
     darkBackground3: chromeValues.muted,
-    darkBackground4: darkBackground.muted,
+    darkBackground4: darkSurface.muted,
     darkBackground5: darkSurface.strong,
     darkBackground6: mixColor(nextTokens.danger, darkBackground.DEFAULT, 0.78),
     darkBackground7: darkSurface.stronger,
@@ -389,9 +389,13 @@ export function createWotThemeVars(tokens: Partial<DuxThemeTokens> = {}, theme: 
 
 export function createUnoThemeVars(tokens: Partial<DuxThemeTokens> = {}, theme: 'light' | 'dark' = 'light') {
   const nextTokens = resolveThemeTokens(tokens)
+  const overlayMaskBase = theme === 'dark'
+    ? mixColor(nextTokens.neutral, '#000000', 0.82)
+    : mixColor(nextTokens.neutral, '#000000', 0.72)
 
   return {
     ...createShadowVars(nextTokens.primary, theme),
+    '--dux-overlay-mask': toRgba(overlayMaskBase, theme === 'dark' ? 0.74 : 0.24),
     ...toCssVars('primary', createColorSemanticValues(nextTokens.primary, theme)),
     ...toCssVars('accent', createColorSemanticValues(nextTokens.primary, theme)),
     ...toCssVars('info', createColorSemanticValues(nextTokens.info, theme)),

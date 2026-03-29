@@ -297,27 +297,23 @@ defineProps<{
     const directive = index === 0 ? 'v-if' : 'v-else-if'
     return `  <${component.importName}
     ${directive}="name === '${component.key}'"
-    ref="activeRef"
   />`
   }).join('\n')
 
   return `<script setup lang="ts">
-import { ref } from 'vue'
+import type { UniOverlayConfirmContext } from '@duxweb/uni'
+import { UNI_OVERLAY_CONTEXT_KEY } from '@duxweb/uni'
+import { provide } from 'vue'
 ${imports}
 
-defineProps<{
+const props = defineProps<{
   name?: string
+  context?: UniOverlayConfirmContext
 }>()
 
-const activeRef = ref<{
-  submit?: () => unknown | Promise<unknown>
-  close?: () => Promise<void>
-}>()
-
-defineExpose({
-  submit: () => activeRef.value?.submit?.(),
-  close: () => activeRef.value?.close?.(),
-})
+if (props.context) {
+  provide(UNI_OVERLAY_CONTEXT_KEY, props.context)
+}
 </script>
 
 <template>

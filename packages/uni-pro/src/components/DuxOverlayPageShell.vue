@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useOverlayContext } from '@duxweb/uni'
+import { OVERLAY_LAYOUT_CONTEXT_KEY } from './overlayLayoutContext'
 
 const props = withDefaults(defineProps<{
   title?: string
@@ -8,28 +9,85 @@ const props = withDefaults(defineProps<{
   cancelText?: string
   submit?: () => unknown | Promise<unknown>
   padded?: boolean
+  safeAreaTop?: boolean
   safeAreaBottom?: boolean
   reserveTabBar?: boolean
+  hasFooterSlot?: boolean
+  fillHeight?: boolean
 }>(), {
   confirmText: '确定',
   cancelText: '取消',
   padded: true,
+  safeAreaTop: false,
   safeAreaBottom: false,
   reserveTabBar: false,
+  hasFooterSlot: false,
+  fillHeight: false,
 })
 
 const overlay = useOverlayContext<unknown, unknown>()
-const contentClass = computed(() => props.padded ? 'px-[28rpx] py-[24rpx]' : '')
-const footerBottomClass = computed(() => {
-  const base = props.safeAreaBottom ? 'pb-[calc(env(safe-area-inset-bottom)+24rpx)]' : 'pb-[24rpx]'
-
-  if (!props.reserveTabBar) {
-    return base
+const overlayLayout = inject(OVERLAY_LAYOUT_CONTEXT_KEY, undefined)
+const isRightDrawer = computed(() => overlay.kind === 'drawer' && overlayLayout?.entry.position !== 'bottom')
+const isBottomDrawer = computed(() => overlay.kind === 'drawer' && overlayLayout?.entry.position === 'bottom')
+const rootClass = computed(() => props.fillHeight ? 'flex h-full min-h-0 flex-col bg-surface' : 'flex min-h-0 max-h-full flex-col bg-surface')
+const contentContainerClass = computed(() => {
+  if (props.fillHeight) {
+    return 'min-h-0 flex-1 overflow-y-auto'
   }
 
-  return props.safeAreaBottom
-    ? 'pb-[calc(env(safe-area-inset-bottom)+148rpx)]'
-    : 'pb-[148rpx]'
+  if (isBottomDrawer.value) {
+    return 'min-h-0 block'
+  }
+
+  return 'min-h-0 flex-1 overflow-y-auto'
+})
+const contentAreaStyle = computed(() => {
+  if (isBottomDrawer.value && overlayLayout) {
+    return {
+      maxHeight: overlayLayout.viewport.bottomDrawerContentMaxHeight,
+    }
+  }
+
+  return undefined
+})
+const contentInnerStyle = computed(() => {
+  if (!props.padded) {
+    return undefined
+  }
+
+  return {
+    padding: '28rpx',
+  }
+})
+const showCloseAction = computed(() => !isRightDrawer.value)
+const headerStyle = computed(() => ({
+  paddingTop: props.safeAreaTop && isRightDrawer.value && overlayLayout
+    ? `${overlayLayout.viewport.topGap}px`
+    : '24rpx',
+  paddingBottom: '24rpx',
+}))
+const footerStyle = computed(() => {
+  if (!props.safeAreaBottom && !props.reserveTabBar) {
+    return {
+      paddingTop: '24rpx',
+      paddingBottom: '40rpx',
+    }
+  }
+
+  const parts = ['40rpx']
+
+  if (props.safeAreaBottom && overlayLayout) {
+    parts.push(`${overlayLayout.viewport.bottomGap}px`)
+  }
+
+  if (props.reserveTabBar) {
+    parts.push('124rpx')
+  }
+
+  return {
+    paddingTop: '24rpx',
+    paddingBottom: `calc(${parts.join(' + ')})`,
+  }
 })
 
 async function close() {
@@ -66,14 +124,18 @@ defineExpose({
 </script>
 
 <template>
-  <view class="flex h-full flex-col bg-surface">
-    <view class="flex items-center justify-between gap-[16rpx] border-b border-neutral-subtle px-[28rpx] py-[24rpx]">
+  <view :class="rootClass">
+    <view
+      class="flex items-center justify-between gap-[16rpx] border-b border-neutral-subtle px-[28rpx]"
+      :style="headerStyle"
+    >
       <text class="flex-1 truncate text-[30rpx] font-semibold text-neutral-stronger">
         {{ title || '操作面板' }}
       </text>
       <view class="flex items-center gap-[16rpx]">
-        <slot name="extra" :close="close" :submit="submit" :loading="overlay.loading" />
+        <slot name="extra" />
         <view
+          v-if="showCloseAction"
           class="flex h-[56rpx] w-[56rpx] items-center justify-center rounded-full bg-neutral-faint"
           hover-class="opacity-80"
           @click="close"
@@ -83,15 +145,30 @@ defineExpose({
       </view>
     </view>
 
-    <view class="min-h-0 flex-1 overflow-y-auto" :class="contentClass">
-      <slot :close="close" :submit="submit" :loading="overlay.loading" />
+    <scroll-view
+      v-if="props.fillHeight || isBottomDrawer"
+      scroll-y
+      :show-scrollbar="false"
+      :class="contentContainerClass"
+      :style="contentAreaStyle"
+    >
+      <view :style="contentInnerStyle">
+        <slot />
+      </view>
+    </scroll-view>
+
+    <view v-else :class="contentContainerClass" :style="contentAreaStyle">
+      <view :style="contentInnerStyle">
+        <slot />
+      </view>
     </view>
 
     <view
-      class="border-t border-neutral-subtle px-[28rpx] pt-[20rpx]"
-      :class="footerBottomClass"
+      class="border-t border-neutral-subtle px-[28rpx]"
+      :style="footerStyle"
     >
-      <slot name="footer" :close="close" :submit="submit" :loading="overlay.loading">
+      <slot v-if="props.hasFooterSlot" name="footer" />
+      <template v-else>
         <view class="grid grid-cols-2 gap-[16rpx]">
           <wd-button plain block @click="close">
             {{ cancelText }}
@@ -100,7 +177,7 @@ defineExpose({
             {{ confirmText }}
           </wd-button>
         </view>
-      </slot>
+      </template>
     </view>
   </view>
 </template>

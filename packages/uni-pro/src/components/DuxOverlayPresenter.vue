@@ -3,12 +3,16 @@ import type { ComponentPublicInstance, PropType } from 'vue'
 import type { UniOverlayContent, UniOverlayEntry } from '@duxweb/uni'
 import { computed, markRaw, provide, ref, shallowRef, watch } from 'vue'
 import {
-  UniOverlayRegistryBridge,
   createOverlayConfirmContext,
   UNI_OVERLAY_CONTEXT_KEY,
   useUniApp,
 } from '@duxweb/uni'
 import DuxOverlayContentRenderer from './DuxOverlayContentRenderer.vue'
+import DuxOverlayRegistryRenderer from './DuxOverlayRegistryRenderer.vue'
+import { OVERLAY_CONTENT_API_KEY } from './overlayContentApi'
+import type { OverlayContentApi } from './overlayContentApi'
+import { OVERLAY_LAYOUT_CONTEXT_KEY } from './overlayLayoutContext'
+import { useOverlayViewport } from './useOverlayViewport'
 
 interface OverlaySubmitter extends ComponentPublicInstance {
   submit?: () => unknown | Promise<unknown>
@@ -32,8 +36,17 @@ const overlayContext = createOverlayConfirmContext(app, props.entry as never)
 const resolvedContent = shallowRef<any>()
 const contentLoading = ref(false)
 const registryContent = computed(() => app.config.overlayRegistry || props.overlayRegistry)
+const registeredContentApi = shallowRef<OverlayContentApi>()
+const overlayViewport = useOverlayViewport()
 
 provide(UNI_OVERLAY_CONTEXT_KEY, overlayContext)
+provide(OVERLAY_CONTENT_API_KEY, (api?: OverlayContentApi) => {
+  registeredContentApi.value = api
+})
+provide(OVERLAY_LAYOUT_CONTEXT_KEY, {
+  entry: props.entry,
+  viewport: overlayViewport,
+})
 
 function isOverlayLoader(content: UniOverlayContent) {
   return typeof content === 'function'
@@ -79,31 +92,31 @@ const popupStyle = computed(() => {
   if (props.entry.kind === 'drawer') {
     if (props.entry.position === 'bottom') {
       if (props.entry.frame === 'page') {
-        return 'width:100vw;max-width:100vw;height:min(80vh,1400rpx);background:var(--dux-color-surface);overflow:hidden;border-radius:36rpx 36rpx 0 0;'
+        return `width:100vw;max-width:100vw;max-height:${overlayViewport.bottomDrawerMaxHeight};box-sizing:border-box;background:var(--dux-color-surface);overflow:hidden;border-radius:36rpx 36rpx 0 0;`
       }
 
-      return 'width:100vw;max-width:100vw;max-height:min(80vh,1400rpx);overflow:hidden;border-radius:36rpx 36rpx 0 0;'
+      return `width:100vw;max-width:100vw;max-height:${overlayViewport.bottomDrawerMaxHeight};overflow:hidden;border-radius:36rpx 36rpx 0 0;`
     }
 
     if (props.entry.frame === 'page') {
-      return `width:${props.entry.width || '760rpx'};max-width:92vw;height:100vh;background:var(--dux-color-surface);`
+      return `width:${props.entry.width || '760rpx'};max-width:92vw;height:100vh;box-sizing:border-box;background:var(--dux-color-surface);border-radius:32rpx 0 0 32rpx;overflow:hidden;`
     }
     return `width:${props.entry.width || '720rpx'};max-width:92vw;height:100vh;`
   }
 
   if (props.entry.kind === 'modal') {
     if (props.entry.frame === 'page') {
-      return `width:${props.entry.width || '720rpx'};max-width:92vw;height:min(88vh,1200rpx);overflow:hidden;border-radius:32rpx;background:var(--dux-color-surface);`
+      return `width:${props.entry.width || '720rpx'};max-width:92vw;max-height:${overlayViewport.modalMaxHeight};overflow:hidden;border-radius:32rpx;background:var(--dux-color-surface);box-sizing:border-box;`
     }
     return `width:${props.entry.width || '680rpx'};max-width:92vw;overflow:hidden;border-radius:32rpx;`
   }
 
   return 'width:620rpx;max-width:90vw;overflow:hidden;border-radius:32rpx;'
 })
-const modalStyle = computed(() => 'background:rgba(15,23,42,0.3);')
+const modalStyle = computed(() => 'background:var(--dux-overlay-mask);')
 
-function bindContentRef(instance: ComponentPublicInstance | Element | null) {
-  contentRef.value = (instance as OverlaySubmitter | null) || undefined
+function resolveContentApi() {
+  return registeredContentApi.value || contentRef.value
 }
 
 async function close() {
@@ -121,7 +134,7 @@ function handleAfterLeave() {
 }
 
 function handleAfterEnter() {
-  void contentRef.value?.refreshLayout?.()
+  void resolveContentApi()?.refreshLayout?.()
 }
 
 async function handleConfirm() {
@@ -142,8 +155,10 @@ async function handleConfirm() {
       return
     }
 
-    if (props.entry.kind !== 'confirm' && contentRef.value?.submit) {
-      const result = await contentRef.value.submit()
+    const api = resolveContentApi()
+
+    if (props.entry.kind !== 'confirm' && api?.submit) {
+      const result = await api.submit()
       if (typeof result !== 'undefined') {
         await app.overlay.submit(props.entry.id, result)
       }
@@ -165,10 +180,9 @@ async function handleConfirm() {
     :position="popupPosition"
     custom-class="pointer-events-auto"
     :close-on-click-modal="entry.closeOnClickModal"
-    root-portal
     :z-index="1200"
     :modal-style="modalStyle"
-    :safe-area-inset-bottom="entry.kind === 'drawer' && popupPosition === 'bottom'"
+    :safe-area-inset-bottom="entry.kind === 'drawer' && popupPosition === 'bottom' && entry.frame !== 'page'"
     :custom-style="popupStyle"
     @after-enter="handleAfterEnter"
     @after-leave="handleAfterLeave"
@@ -198,10 +212,9 @@ async function handleConfirm() {
 
     <view
       v-else-if="entry.frame === 'page' && entry.contentKey && registryContent"
-      class="h-full"
+      :class="entry.kind === 'drawer' ? 'h-full' : ''"
     >
-      <UniOverlayRegistryBridge
-        ref="contentRef"
+      <DuxOverlayRegistryRenderer
         :registry="registryContent"
         :name="entry.contentKey"
         :context="overlayContext"
@@ -219,7 +232,7 @@ async function handleConfirm() {
       v-else-if="entry.frame === 'page' && resolvedContent"
       ref="contentRef"
       :content="resolvedContent"
-      content-class="h-full"
+      :content-class="entry.kind === 'drawer' ? 'h-full' : undefined"
     />
 
     <view

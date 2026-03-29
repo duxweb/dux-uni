@@ -6,7 +6,11 @@ hero:
   name: Dux Uni
   text: 针对 uni-app 开发的 Headless 应用框架
   tagline: Dux Uni 把路由、数据请求、查询缓存、表单、登录鉴权、弹层、实时连接和 Schema 渲染这些高频重复能力统一成应用层能力，让你把精力放回业务模块本身。
-  mockUrl: docs.duxweb.com/uni
+  qrCodeSize: 156
+  qrCodes:
+    - title: 小程序体验
+      image: /mini-program-qrcode.jpg
+      description: 扫码打开 Dux Uni 小程序示例
   actions:
     - theme: brand
       text: 先看概述

@@ -72,10 +72,6 @@ function normalizePageMiddleware(page: DuxPageMeta) {
 }
 
 function normalizePageTabBar(page: DuxPageMeta, mode: 'auto' | 'custom' | 'native') {
-  if (!page.tabBar) {
-    return undefined
-  }
-
   const resolvedMode = mode === 'auto' ? 'custom' : mode
 
   if (typeof page.tabBar === 'object') {

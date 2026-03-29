@@ -43,6 +43,7 @@ const highlightIconMap: Record<string, string> = {
   表单: 'edit-1',
   起步: 'home',
   扩展: 'link',
+  弹层: 'windows',
 }
 
 const heroStyle = {

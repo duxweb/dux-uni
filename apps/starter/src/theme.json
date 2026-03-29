@@ -12,13 +12,13 @@
     "tabSelectedColor": "#059669"
   },
   "dark": {
-    "bgColor": "#1c1c1e",
-    "bgColorBottom": "#1c1c1e",
-    "bgColorTop": "#37373a",
+    "bgColor": "#171719",
+    "bgColorBottom": "#171719",
+    "bgColorTop": "#333336",
     "bgTxtStyle": "light",
-    "navBgColor": "#151517",
+    "navBgColor": "#1f1f21",
     "navTxtStyle": "white",
-    "tabBgColor": "#151517",
+    "tabBgColor": "#1f1f21",
     "tabBorderStyle": "white",
     "tabFontColor": "#aaaaaf",
     "tabSelectedColor": "#059669"

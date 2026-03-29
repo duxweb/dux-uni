@@ -59,6 +59,12 @@ const highlights: DemoHighlight[] = [
     summary: 'useEvent() 与 useListener() 让页面和模块在运行时进行轻量事件分发与状态回显。',
     tag: '扩展',
   },
+  {
+    id: 6,
+    title: '异步弹窗',
+    summary: 'useConfirm、useModal 与 useDrawer 都以 Promise 返回结果，页面只消费 payload 与提交结果，不直接耦合具体 UI 实现。',
+    tag: '弹层',
+  },
 ]
 
 const members: DemoMember[] = [

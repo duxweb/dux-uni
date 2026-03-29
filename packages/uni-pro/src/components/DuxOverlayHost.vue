@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <view class="pointer-events-none">
+  <view>
     <DuxOverlayPresenter
       v-for="entry in overlayEntries"
       :key="entry.id"

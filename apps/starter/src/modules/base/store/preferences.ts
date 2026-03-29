@@ -1,14 +1,15 @@
+import { type UniResolvedTheme, resolveSystemThemeSync } from '@duxweb/uni'
 import { defineStore } from 'pinia'
 
 type ThemeMode = 'system' | 'light' | 'dark'
-type ResolvedTheme = 'light' | 'dark'
+type ResolvedTheme = UniResolvedTheme
 
 export const useBasePreferencesStore = defineStore('starter-base-preferences', {
   state: () => ({
     homeNoticeVisible: true,
     featureVisitedCount: 0,
     themeMode: 'system' as ThemeMode,
-    systemTheme: 'light' as ResolvedTheme,
+    systemTheme: resolveSystemThemeSync(),
   }),
   getters: {
     resolvedTheme(state): ResolvedTheme {

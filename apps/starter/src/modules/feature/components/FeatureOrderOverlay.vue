@@ -26,11 +26,6 @@ async function submit() {
 async function refreshLayout() {
   await formRef.value?.refreshLayout?.()
 }
-
-defineExpose({
-  submit,
-  refreshLayout,
-})
 </script>
 
 <template>
@@ -39,6 +34,7 @@ defineExpose({
     :title="isEdit ? '编辑工单' : '新建工单'"
     :confirm-text="isEdit ? '保存修改' : '创建工单'"
     :submit="submit"
+    :refresh-layout="refreshLayout"
   >
     <FeatureOrderOverlayForm ref="formRef" :is-edit="isEdit" :order-id="orderId" />
   </DuxDrawerPage>
@@ -48,6 +44,7 @@ defineExpose({
     :title="isEdit ? '编辑工单' : '新建工单'"
     :confirm-text="isEdit ? '保存修改' : '创建工单'"
     :submit="submit"
+    :refresh-layout="refreshLayout"
   >
     <FeatureOrderOverlayForm ref="formRef" :is-edit="isEdit" :order-id="orderId" />
   </DuxModalPage>

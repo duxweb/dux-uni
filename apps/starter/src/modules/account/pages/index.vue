@@ -23,8 +23,6 @@ const authStore = useAuthStore()
 const { themeModeLabel, cycleThemeMode } = useStarterTheme()
 const isLogin = computed(() => Boolean(auth.value?.token))
 const checkAction = useCheck()
-const checkLoading = computed(() => checkAction.isPending.value)
-const logoutLoading = ref(false)
 const currentUserResult = ref<unknown>(null)
 const checkUserResult = ref<unknown>(null)
 const logoutUserResult = ref<unknown>(null)
@@ -110,7 +108,6 @@ async function validateUser() {
 }
 
 async function logoutUser() {
-  logoutLoading.value = true
   try {
     const result = await (dux.config.authProvider?.logout?.({}, dux) || Promise.resolve({
       success: true,
@@ -125,9 +122,6 @@ async function logoutUser() {
   catch (error) {
     logoutUserResult.value = captureError(error)
     toast.warning('退出登录失败')
-  }
-  finally {
-    logoutLoading.value = false
   }
 }
 
@@ -164,17 +158,23 @@ const openLogin = wrapAsyncEvent('account.openLogin', async () => {
             {{ themeModeLabel }}
           </text>
         </view>
-        <wd-button size="small" plain @click="toggleThemeMode">
-          切换模式
-        </wd-button>
+        <view
+          class="shrink-0 inline-flex items-center justify-center rounded-full border border-white/25 bg-glass-strong px-[28rpx] py-[14rpx]"
+          hover-class="opacity-85"
+          @click="toggleThemeMode"
+        >
+          <text class="text-[24rpx] text-inverse font-semibold leading-[1.2]">
+            切换模式
+          </text>
+        </view>
       </view>
     </view>
 
     <view class="overflow-hidden rounded-[24rpx]">
       <wd-cell-group title="账户能力演示" border>
-        <wd-cell title="获取用户" value="读取 useAuth 当前值" is-link @click="getCurrentUser" />
-        <wd-cell title="验证用户" :value="checkLoading ? '验证中...' : '调用 /check'" is-link @click="validateUser" />
-        <wd-cell title="退出登录" :value="logoutLoading ? '退出中...' : '调用 /logout 并清空会话'" is-link @click="logoutUser" />
+        <wd-cell title="获取用户" is-link @click="getCurrentUser" />
+        <wd-cell title="验证用户" is-link @click="validateUser" />
+        <wd-cell title="退出登录" is-link @click="logoutUser" />
       </wd-cell-group>
     </view>
 

@@ -7,6 +7,7 @@ import { routerManifest } from '@/runtime/router/manifest'
 const router = useRouter()
 const currentPath = ref('')
 const activeName = ref('')
+const navigating = ref(false)
 
 const iconMap: Record<string, string> = {
   home: 'home',
@@ -118,6 +119,10 @@ function resolveTabbarChangeValue(event: unknown) {
 }
 
 async function handleChange(event: unknown) {
+  if (navigating.value) {
+    return
+  }
+
   const value = resolveTabbarChangeValue(event)
   const item = allItems.value.find(entry => entry.name === value)
 
@@ -132,12 +137,16 @@ async function handleChange(event: unknown) {
   }
 
   try {
+    navigating.value = true
     activeName.value = item.name
-    await router.to(item.path)
+    await router.reLaunch(item.path)
   }
   catch (error) {
     activeName.value = resolveActiveName(currentPath.value)
     console.error('[starter] tabbar navigation failed', error)
+  }
+  finally {
+    navigating.value = false
   }
 }
 

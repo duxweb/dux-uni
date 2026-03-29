@@ -193,11 +193,6 @@ async function refreshLayout() {
     prioritySegmentedRef.value?.updateActiveStyle?.()
   }, 32)
 }
-
-defineExpose({
-  submit,
-  refreshLayout,
-})
 </script>
 
 <template>
@@ -205,6 +200,7 @@ defineExpose({
     :title="isEdit ? '更新分页列表示例' : '新建分页列表示例'"
     :confirm-text="isEdit ? '保存修改' : '创建列表项'"
     :submit="submit"
+    :refresh-layout="refreshLayout"
   >
     <view class="flex flex-col gap-[20rpx]">
       <view class="overflow-hidden rounded-[24rpx]">

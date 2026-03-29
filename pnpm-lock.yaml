@@ -19,8 +19,8 @@ importers:
   apps/docs:
     dependencies:
       '@duxweb/vitepress-theme':
-        specifier: ^1.1.7
-        version: 1.1.7(mermaid@11.13.0)(tailwindcss@4.2.2)(typescript@5.9.3)(vitepress@1.6.4(@algolia/client-search@5.50.0)(@types/node@24.12.0)(change-case@5.4.4)(postcss@8.5.8)(sass@1.78.0)(search-insights@2.17.3)(terser@5.46.1)(typescript@5.9.3))
+        specifier: ^1.1.9
+        version: 1.1.9(mermaid@11.13.0)(tailwindcss@4.2.2)(typescript@5.9.3)(vitepress@1.6.4(@algolia/client-search@5.50.0)(@types/node@24.12.0)(change-case@5.4.4)(postcss@8.5.8)(sass@1.78.0)(search-insights@2.17.3)(terser@5.46.1)(typescript@5.9.3))
     devDependencies:
       vitepress:
         specifier: ^1.6.4
@@ -1481,8 +1481,8 @@ packages:
       search-insights:
         optional: true
 
-  '@duxweb/vitepress-theme@1.1.7':
-    resolution: {integrity: sha512-B6GL2VOnHkUJETkN7GFj/GVRduO7Wlt0zO5Tg8G7ayf46kQK+fMJrf8q3HylgcrxHxDoqUKhKpot8oX4744zQw==}
+  '@duxweb/vitepress-theme@1.1.9':
+    resolution: {integrity: sha512-FuwBvU/tQuaLOhARfVdty1oan0QVYzWOp83r8dOyG+ViO1Qf5xbNzzsw8S+48V0yG9s68WueN6wkP50cSxvZhw==}
     peerDependencies:
       vitepress: ^1.6.4
 
@@ -10492,10 +10492,11 @@ snapshots:
     transitivePeerDependencies:
       - '@algolia/client-search'
 
-  '@duxweb/vitepress-theme@1.1.7(mermaid@11.13.0)(tailwindcss@4.2.2)(typescript@5.9.3)(vitepress@1.6.4(@algolia/client-search@5.50.0)(@types/node@24.12.0)(change-case@5.4.4)(postcss@8.5.8)(sass@1.78.0)(search-insights@2.17.3)(terser@5.46.1)(typescript@5.9.3))':
+  '@duxweb/vitepress-theme@1.1.9(mermaid@11.13.0)(tailwindcss@4.2.2)(typescript@5.9.3)(vitepress@1.6.4(@algolia/client-search@5.50.0)(@types/node@24.12.0)(change-case@5.4.4)(postcss@8.5.8)(sass@1.78.0)(search-insights@2.17.3)(terser@5.46.1)(typescript@5.9.3))':
     dependencies:
       '@iconify/tailwind4': 1.2.3(tailwindcss@4.2.2)
       '@vueuse/core': 11.3.0(vue@3.5.31(typescript@5.9.3))
+      dayjs: 1.11.20
       minisearch: 7.2.0
       vitepress: 1.6.4(@algolia/client-search@5.50.0)(@types/node@24.12.0)(change-case@5.4.4)(postcss@8.5.8)(sass@1.78.0)(search-insights@2.17.3)(terser@5.46.1)(typescript@5.9.3)
       vitepress-mermaid-renderer: 1.1.20(mermaid@11.13.0)(vue@3.5.31(typescript@5.9.3))

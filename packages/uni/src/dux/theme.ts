@@ -131,9 +131,9 @@ export function resolveThemeTokens(tokens: Partial<DuxThemeTokens> = {}): DuxThe
 
 export function createUniTheme(tokens: Partial<DuxThemeTokens> = {}) {
   const theme = resolveThemeTokens(tokens)
-  const darkBackground = mixColor(DARK_CANVAS, theme.background, 0.08)
-  const darkBackgroundTop = mixColor(DARK_BACKGROUND_TOP, theme.backgroundMuted, 0.08)
-  const darkChrome = mixColor(DARK_CANVAS, theme.chrome, 0.05)
+  const darkBackground = mixColor(DARK_CANVAS, theme.background, 0.06)
+  const darkBackgroundTop = mixColor(DARK_BACKGROUND_TOP, theme.backgroundMuted, 0.06)
+  const darkChrome = mixColor(DARK_CANVAS, theme.chrome, 0.09)
   const darkTabColor = mixColor(theme.neutral, '#ffffff', 0.4)
 
   return {

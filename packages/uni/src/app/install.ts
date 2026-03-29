@@ -3,8 +3,10 @@ import type { UniAppContext } from '../types'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { inject } from 'vue'
 import { syncRuntimeStores } from '../runtime/state'
+import { installNativeThemeRuntime } from '../runtime/theme'
 
 export const UNI_APP_KEY: InjectionKey<UniAppContext> = Symbol('dux.uni')
+export const OVERLAY_REGISTRY_COMPONENT_NAME = 'DuxAppOverlayRegistry'
 
 function ensureAbortController() {
   if (typeof globalThis.AbortController !== 'undefined') {
@@ -66,16 +68,22 @@ function ensureAbortController() {
 export function installUniApp(app: {
   use: (...args: any[]) => unknown
   provide: (...args: any[]) => unknown
+  component?: (name: string, component: unknown) => unknown
 }, uni: UniAppContext, pinia?: unknown) {
   ensureAbortController()
   if (pinia) {
     uni.pinia = pinia
+  }
+  if (uni.config.overlayRegistry && typeof uni.config.overlayRegistry !== 'string' && typeof app.component === 'function') {
+    app.component(OVERLAY_REGISTRY_COMPONENT_NAME, uni.config.overlayRegistry)
+    uni.config.overlayRegistry = OVERLAY_REGISTRY_COMPONENT_NAME
   }
   app.use(VueQueryPlugin, {
     queryClient: uni.queryClient,
   })
   app.provide(UNI_APP_KEY, uni)
   app.provide('dux.uni', uni)
+  installNativeThemeRuntime(uni)
   void uni.ready.then(() => {
     syncRuntimeStores(uni)
   })

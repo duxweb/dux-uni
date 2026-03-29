@@ -607,6 +607,12 @@ export interface UniRequestClient {
   request: <T = unknown>(options: UniRequestOptions) => Promise<UniRequestResponse<T>>
 }
 
+export interface UniThemeRuntimeConfig {
+  tokens?: Dict<string>
+  getTheme?: (context: UniAppContext) => 'light' | 'dark'
+  onSystemThemeChange?: (theme: 'light' | 'dark', context: UniAppContext) => void
+}
+
 export interface UniAppConfig {
   appName?: string
   storageKey?: string
@@ -627,6 +633,7 @@ export interface UniAppConfig {
   storage?: UniStorageAdapter
   schema?: UniSchemaRendererOptions
   permission?: UniPermissionConfig
+  themeRuntime?: UniThemeRuntimeConfig
   socket?: UniSocketManagerConfig
   sockets?: Record<string, UniSocketManagerConfig>
 }

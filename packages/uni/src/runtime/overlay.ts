@@ -58,7 +58,7 @@ export function createOverlayRuntime(getApp: () => UniAppContext): UniOverlayRun
         id,
         kind,
         frame: request.frame || 'default',
-        position: 'position' in request ? request.position : undefined,
+        position: 'position' in request ? request.position : (kind === 'drawer' ? 'bottom' : undefined),
         title: request.title,
         message: 'message' in request ? request.message : undefined,
         confirmText: request.confirmText || '确定',

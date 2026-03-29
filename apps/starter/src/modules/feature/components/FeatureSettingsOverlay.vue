@@ -25,10 +25,6 @@ async function submit() {
     channel: form.channel || '站内消息',
   }
 }
-
-defineExpose({
-  submit,
-})
 </script>
 
 <template>
