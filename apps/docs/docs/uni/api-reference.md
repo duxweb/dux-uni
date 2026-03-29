@@ -15,6 +15,8 @@
 | `definePageMeta()` | 定义页面 Route 的辅助方法 | [页面 Route](/uni/page-route) |
 | `useUniApp()` | 读取当前已安装的应用 runtime | [应用生命周期](/guide/runtime-entry) |
 | `useDux()` | `useUniApp()` 的同层入口，语义上更贴近 Dux runtime | [应用生命周期](/guide/runtime-entry) |
+| `useThemeStore()` | 读取主题偏好 store，管理 `system / light / dark` 模式 | [主题与 Token](/uni-pro/theme#主题模式切换) |
+| `useThemePreference()` | 主题模式的轻量 composable，返回当前主题值和切换动作 | [主题与 Token](/uni-pro/theme#主题模式切换) |
 
 ## 路由与页面
 
@@ -140,3 +142,4 @@
 | `UniSchemaBindings` | Schema 绑定上下文类型 | [Schema 协议](/uni/schema-protocol) |
 | `DuxConfig` | `dux.config.ts` 类型 | [应用配置](/guide/configuration) |
 | `DuxThemeTokens` | 主题 token 类型 | [主题与 Token](/uni-pro/theme) |
+| `UniThemePreference` | 主题偏好类型，支持 `system / light / dark` | [主题与 Token](/uni-pro/theme#主题模式切换) |

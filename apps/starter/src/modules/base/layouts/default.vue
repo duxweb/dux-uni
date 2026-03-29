@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { resolveDuxConfig, useRoute } from '@duxweb/uni'
+import { resolveDuxConfig, useRoute, useThemePreference } from '@duxweb/uni'
 import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
 import { computed } from 'vue'
 import duxConfig from '@/dux.config'
 import AppNavbar from '../components/AppNavbar.vue'
-import { useStarterTheme } from '../composables/useStarterTheme'
 
 const dux = resolveDuxConfig(duxConfig)
-const { currentTheme } = useStarterTheme()
+const { currentTheme } = useThemePreference()
 const route = useRoute()
 const hideNavbar = computed(() => Boolean(route.meta?.immersive || route.meta?.guestOnly))
 </script>

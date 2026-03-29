@@ -13,8 +13,7 @@ export default defineDuxConfig({
     tabBar: ['home', 'feature', 'account'],
   },
   ui: {
-    theme: 'light',
-    darkmode: true,
+    theme: 'auto',
     navigationStyle: 'custom',
     schemaComponents: ['wd-button'],
     tokens: {

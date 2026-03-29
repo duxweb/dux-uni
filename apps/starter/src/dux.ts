@@ -1,16 +1,13 @@
 import {
   OVERLAY_REGISTRY_COMPONENT_NAME,
-  type UniResolvedTheme,
   createUni,
   defineUniConfig,
   resolveDuxConfig,
   simpleAuthProvider,
   simpleDataProvider,
 } from '@duxweb/uni'
-import type { Pinia } from 'pinia'
 import { createMockRequestAdapter } from './demo/mockApi'
 import duxConfig from './dux.config'
-import { useBasePreferencesStore } from './modules/base/store/preferences'
 import { generatedSchemaComponents } from './runtime/generated/schema-components'
 import { routerManifest } from './runtime/router/manifest'
 
@@ -23,15 +20,6 @@ export const dux = createUni(defineUniConfig({
   ...config.runtime,
   appName: config.app.name,
   overlayRegistry: OVERLAY_REGISTRY_COMPONENT_NAME,
-  themeRuntime: {
-    tokens: config.ui.tokens,
-    getTheme(context) {
-      return useBasePreferencesStore(context.pinia as Pinia).resolvedTheme
-    },
-    onSystemThemeChange(theme: UniResolvedTheme, context) {
-      useBasePreferencesStore(context.pinia as Pinia).setSystemTheme(theme)
-    },
-  },
   tabBarMode: routerManifest.config.router.tabBarMode,
   pages: routerManifest.pages,
   modules: config.modules,

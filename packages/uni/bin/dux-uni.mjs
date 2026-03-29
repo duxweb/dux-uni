@@ -145,7 +145,7 @@ function createPagesJson(config, routerManifest) {
       },
     })),
     ...(tabBar ? { tabBar } : {}),
-    ...(resolvedConfig.ui.darkmode ? { themeLocation: 'theme.json' } : {}),
+    ...(resolvedConfig.ui.theme === 'auto' ? { themeLocation: 'theme.json' } : {}),
     subPackages: [],
   }
 }
@@ -579,7 +579,7 @@ async function syncProject(rootDir) {
   )
 
   const themeJsonPath = resolve(srcDir, 'theme.json')
-  if (resolveDuxConfig(duxConfig).ui.darkmode) {
+  if (resolveDuxConfig(duxConfig).ui.theme === 'auto') {
     writeFileSync(
       themeJsonPath,
       `${JSON.stringify(createUniThemeJson(duxConfig), null, 2)}\n`,

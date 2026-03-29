@@ -98,8 +98,7 @@ import { defaultSpacingTokens } from '@duxweb/uni-pro'
 
 ```ts
 ui: {
-  theme: 'light',
-  darkmode: true,
+  theme: 'auto',
   tokens: {
     primary: '#059669',
     info: '#0ea5e9',
@@ -172,3 +171,145 @@ import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
 - Wot UI 不突兀
 - UnoCSS 不突兀
 - 业务模块共享同一套 token 语义
+
+## 主题模式切换
+
+`@duxweb/uni` 现在内置了主题偏好 store，不需要再在业务项目里自己维护一套“系统 / 浅色 / 深色”底层状态。
+
+常用入口：
+
+- `useThemeStore()`
+- `useThemePreference()`
+
+推荐约定：
+
+- `ui.theme = 'auto'`
+  作为默认值，表示跟随系统
+- `ui.theme = 'light'`
+  固定浅色，不跟随系统
+- `ui.theme = 'dark'`
+  固定深色，不跟随系统
+
+推荐页面里直接使用 `useThemePreference()`：
+
+```ts
+import { useThemePreference } from '@duxweb/uni'
+
+const {
+  themePreference,
+  systemTheme,
+  currentTheme,
+  setThemePreference,
+  cycleThemePreference,
+} = useThemePreference()
+```
+
+它只提供主题值和动作：
+
+- `themePreference`
+  用户当前设置的模式：`system / light / dark`
+- `systemTheme`
+  当前设备探测到的系统模式：`light / dark`
+- `currentTheme`
+  实际生效的主题值：`light / dark`
+- `setThemePreference(mode)`
+  显式设置主题模式
+- `cycleThemePreference()`
+  在三种模式间循环切换
+
+注意：
+
+- 这个 composable 不返回业务文案
+- 类似“跟随系统（深色）”这种 label，建议由页面自己计算
+
+页面里最常见的接法：
+
+```vue
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useThemePreference } from '@duxweb/uni'
+
+const { themePreference, systemTheme, currentTheme, cycleThemePreference } = useThemePreference()
+
+const themePreferenceLabel = computed(() => {
+  if (themePreference.value === 'system') {
+    return `跟随系统 (${systemTheme.value === 'dark' ? '深色' : '浅色'})`
+  }
+  return themePreference.value === 'dark' ? '深色模式' : '浅色模式'
+})
+</script>
+
+<template>
+  <view>
+    <text>当前主题：{{ currentTheme }}</text>
+    <text>当前模式：{{ themePreferenceLabel }}</text>
+    <wd-button @click="cycleThemePreference">
+      切换主题
+    </wd-button>
+  </view>
+</template>
+```
+
+## 运行时接入
+
+如果你使用的是：
+
+- `defineDuxConfig()`
+- `resolveDuxConfig()`
+- `createUni()`
+
+那么主题运行时现在会自动接入，不需要在业务里手写 `themeRuntime`。
+
+也就是这类项目只要配置好：
+
+```ts
+ui: {
+  theme: 'auto',
+  tokens: {
+    primary: '#059669',
+    neutral: '#71717a',
+    background: '#fafafa',
+    chrome: '#ffffff',
+    surface: '#ffffff',
+  },
+}
+```
+
+`resolveDuxConfig()` 会自动把 `ui.tokens` 注入到运行时主题配置，并默认接上：
+
+- 系统主题初始值同步
+- `uni.onThemeChange`
+- `uni.setNavigationBarColor()`
+- `uni.setBackgroundColor()`
+- `useThemeStore()` 的默认桥接
+
+所以 starter 这类标准项目里，`dux.ts` 不需要再额外写：
+
+```ts
+themeRuntime: {
+  // 不需要手写
+}
+```
+
+只有在完全裸用 `defineUniConfig()` / `createUni()`、并且不走 `dux.config.ts` 这条链路时，才需要自己显式配置 `themeRuntime`。
+
+裸 runtime 的手动写法仍然是：
+
+```ts
+createUni(defineUniConfig({
+  themeRuntime: {
+    tokens,
+  },
+}))
+```
+
+这样分层会更清晰：
+
+- `dux.config.ts`
+  负责 token 和默认主题模式
+- `resolveDuxConfig()`
+  负责自动注入主题运行时
+- `useThemeStore()`
+  负责主题模式偏好
+- 页面组件
+  只负责显示和交互

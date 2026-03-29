@@ -7,15 +7,14 @@
 
 <script setup lang="ts">
 import type { DemoSchemaPayload } from '@/demo/types'
-import { UniSchemaRenderer, useCustom, usePageTitle } from '@duxweb/uni'
+import { UniSchemaRenderer, useCustom, usePageTitle, useThemePreference } from '@duxweb/uni'
 import { computed, reactive, ref } from 'vue'
-import { useStarterTheme } from '@/modules/base/composables/useStarterTheme'
 import { wrapAsyncEvent } from '@/utils/async'
 
 const schemaMode = ref('预览')
 const schemaModes = ['预览', 'JSON']
 const schemaStatusOptions = ['active', 'draft', 'archived']
-const { currentTheme } = useStarterTheme()
+const { currentTheme } = useThemePreference()
 
 const schemaState = reactive({
   message: '这段文本来自 bindings.state.message，可被 JSON 输入框直接改写。',

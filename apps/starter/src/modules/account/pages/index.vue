@@ -9,10 +9,9 @@
 </route>
 
 <script setup lang="ts">
-import { useAuth, useAuthStore, useCheck, usePageTitle, useRouter, useUniApp } from '@duxweb/uni'
+import { useAuth, useAuthStore, useCheck, usePageTitle, useRouter, useThemePreference, useUniApp } from '@duxweb/uni'
 import { computed, ref } from 'vue'
 import { useToast } from 'wot-design-uni/components/wd-toast/index'
-import { useStarterTheme } from '@/modules/base/composables/useStarterTheme'
 import { wrapAsyncEvent } from '@/utils/async'
 
 const dux = useUniApp()
@@ -20,7 +19,7 @@ const toast = useToast()
 const auth = useAuth()
 const router = useRouter()
 const authStore = useAuthStore()
-const { themeModeLabel, cycleThemeMode } = useStarterTheme()
+const { themePreference, systemTheme, cycleThemePreference } = useThemePreference()
 const isLogin = computed(() => Boolean(auth.value?.token))
 const checkAction = useCheck()
 const currentUserResult = ref<unknown>(null)
@@ -28,6 +27,13 @@ const checkUserResult = ref<unknown>(null)
 const logoutUserResult = ref<unknown>(null)
 const userName = computed<string>(() => String(auth.value?.user?.name || '访客'))
 const userInitial = computed<string>(() => userName.value.slice(0, 1))
+const themePreferenceLabel = computed(() => {
+  if (themePreference.value === 'system') {
+    return `跟随系统 (${systemTheme.value === 'dark' ? '深色' : '浅色'})`
+  }
+
+  return themePreference.value === 'dark' ? '深色模式' : '浅色模式'
+})
 const heroStyle = {
   backgroundColor: 'var(--dux-color-primary)',
 }
@@ -91,8 +97,8 @@ function getCurrentUser() {
 }
 
 function toggleThemeMode() {
-  cycleThemeMode()
-  toast.show(`主题已切换为${themeModeLabel.value}`)
+  cycleThemePreference()
+  toast.show(`主题已切换为${themePreferenceLabel.value}`)
 }
 
 async function validateUser() {
@@ -155,7 +161,7 @@ const openLogin = wrapAsyncEvent('account.openLogin', async () => {
             界面主题
           </text>
           <text class="text-[22rpx] text-inverse-muted leading-[1.6]">
-            {{ themeModeLabel }}
+            {{ themePreferenceLabel }}
           </text>
         </view>
         <view

@@ -20,7 +20,7 @@ export default defineDuxConfig({
     tabBar: ['home', 'account'],
   },
   ui: {
-    theme: 'light',
+    theme: 'auto',
   },
   runtime: {
     storageKey: 'template-session',
@@ -65,8 +65,7 @@ router: {
 ```ts
 ui: {
   library: 'wot',
-  theme: 'light',
-  darkmode: true,
+  theme: 'auto',
   tokens: {
     primary: '#059669',
     neutral: '#71717a',
@@ -83,6 +82,15 @@ ui: {
 ```
 
 这里不承载业务 UI 代码，只承载应用视觉层默认配置。
+
+`ui.theme` 语义：
+
+- `auto`
+  默认跟随系统
+- `light`
+  固定浅色
+- `dark`
+  固定深色
 
 推荐优先维护语义 token，而不是直接在页面里散写十六进制颜色。
 
@@ -114,6 +122,7 @@ storageKey
 request
 query
 permission
+themeRuntime
 ```
 
 ### runtime.storageKey
@@ -171,6 +180,64 @@ onRequest
 onResponse
 onError
 ```
+
+### runtime.themeRuntime
+
+如果应用支持浅色 / 深色 / 跟随系统，并且希望切换时 uni 原生导航栏与页面背景同步变化，可以配置 `themeRuntime`。
+
+但要注意：
+
+- 走 `defineDuxConfig() + resolveDuxConfig()` 的标准项目，通常不需要自己手写这一段
+- 只要走 `defineDuxConfig() + resolveDuxConfig()`，运行时就会自动注入默认的 `themeRuntime`
+- 只有裸用 `defineUniConfig()` / `createUni()` 时，才更常需要手动配置
+
+标准项目等价于自动生成：
+
+```ts
+runtime: {
+  themeRuntime: {
+    tokens: ui.tokens,
+  },
+}
+```
+
+并默认桥接 `useThemeStore()`。
+
+```ts
+import { defineUniConfig, useThemeStore } from '@duxweb/uni'
+import type { Pinia } from 'pinia'
+
+defineUniConfig({
+  themeRuntime: {
+    tokens: config.ui.tokens,
+    getTheme(context) {
+      return useThemeStore(context.pinia as Pinia).resolvedTheme
+    },
+    onSystemThemeChange(theme, context) {
+      useThemeStore(context.pinia as Pinia).setSystemTheme(theme)
+    },
+  },
+})
+```
+
+作用：
+
+- 用 `tokens` 生成 uni 原生主题色
+- 根据 `getTheme()` 返回值同步当前生效主题
+- 系统主题变化时，通过 `onSystemThemeChange()` 回写到主题 store
+
+如果你没有自定义需求，建议不要覆盖这段默认行为。
+
+推荐职责划分：
+
+- `ui.tokens`
+  管理颜色 token
+- `themeRuntime`
+  管理原生主题同步
+- `useThemeStore()`
+  管理主题偏好状态
+
+如果只是静态主题，不需要切换，也可以不配置这一段。
 
 ## extraPages
 

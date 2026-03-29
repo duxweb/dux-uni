@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { resolveDuxConfig } from '@duxweb/uni'
+import { resolveDuxConfig, useThemePreference } from '@duxweb/uni'
 import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
 import { computed } from 'vue'
 import duxConfig from '@/dux.config'
 import { routerManifest } from '@/runtime/router/manifest'
 import AppNavbar from '../components/AppNavbar.vue'
 import AppTabbar from '../components/AppTabbar.vue'
-import { useStarterTheme } from '../composables/useStarterTheme'
 
 const dux = resolveDuxConfig(duxConfig)
-const { currentTheme } = useStarterTheme()
+const { currentTheme } = useThemePreference()
 const customTabBar = computed(() => routerManifest.config.router.tabBarMode !== 'native')
 </script>
 

@@ -1,6 +1,7 @@
 import type { StoreDefinition } from 'pinia'
 import type { QueryClient, QueryClientConfig } from '@tanstack/vue-query'
 import type { Component } from 'vue'
+import type { DuxThemeTokens } from './dux/types'
 
 export type Dict<T = unknown> = Record<string, T>
 export type UniTabBarMode = 'auto' | 'custom' | 'native'
@@ -608,7 +609,8 @@ export interface UniRequestClient {
 }
 
 export interface UniThemeRuntimeConfig {
-  tokens?: Dict<string>
+  tokens?: Partial<DuxThemeTokens>
+  mode?: 'system' | 'light' | 'dark'
   getTheme?: (context: UniAppContext) => 'light' | 'dark'
   onSystemThemeChange?: (theme: 'light' | 'dark', context: UniAppContext) => void
 }

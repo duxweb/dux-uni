@@ -10,6 +10,8 @@ import type {
 } from './types.ts'
 import { createDuxRouterManifestFromPages } from './router.ts'
 import { createUniTheme, defaultRadiusTokens, defaultSpacingTokens, resolveThemeTokens } from './theme.ts'
+import { resolveSystemThemeSync } from '../runtime/theme.ts'
+import { useThemeStore } from '../stores/theme.ts'
 
 function normalizePagePath(path: string) {
   return path.replace(/^\/+/, '')
@@ -57,28 +59,75 @@ export function defineDuxConfig<T extends DuxConfig>(config: T): T {
   return config
 }
 
+function isAutoTheme(theme: ResolvedDuxConfig['ui']['theme']) {
+  return theme === 'auto'
+}
+
+function resolveFixedTheme(theme: ResolvedDuxConfig['ui']['theme']) {
+  return theme === 'dark' ? 'dark' : 'light'
+}
+
 export function resolveDuxConfig(config: DuxConfig): ResolvedDuxConfig {
+  const runtimeTheme = config.runtime?.themeRuntime
+  const resolvedThemeMode = config.ui?.theme || 'auto'
+  const runtimeThemeMode = resolvedThemeMode === 'auto' ? 'system' : resolvedThemeMode
+  const resolvedTokens = resolveThemeTokens(config.ui?.tokens || {})
+  const resolvedRadius = {
+    ...defaultRadiusTokens,
+    ...(config.ui?.radius || {}),
+  }
+  const resolvedSpacing = {
+    ...defaultSpacingTokens,
+    ...(config.ui?.spacing || {}),
+  }
+
+  const resolvedRuntime = resolvedThemeMode || runtimeTheme?.tokens
+    ? {
+        ...(config.runtime || {}),
+        themeRuntime: {
+          ...(runtimeTheme || {}),
+          tokens: runtimeTheme?.tokens || resolvedTokens,
+          mode: runtimeTheme?.mode || runtimeThemeMode,
+          getTheme: runtimeTheme?.getTheme || ((context) => {
+            if (runtimeThemeMode !== 'system') {
+              return runtimeThemeMode
+            }
+            const pinia = context.pinia as Parameters<typeof useThemeStore>[0] | undefined
+            if (!pinia) {
+              return resolveSystemThemeSync()
+            }
+            return useThemeStore(pinia).resolvedTheme
+          }),
+          onSystemThemeChange: runtimeTheme?.onSystemThemeChange || ((theme, context) => {
+            const pinia = context.pinia as Parameters<typeof useThemeStore>[0] | undefined
+            if (!pinia) {
+              return
+            }
+            const store = useThemeStore(pinia)
+            if (runtimeThemeMode !== 'system') {
+              store.setThemePreference(runtimeThemeMode)
+            }
+            store.setSystemTheme(theme)
+          }),
+        },
+      }
+    : config.runtime
+
   return {
     ...config,
+    runtime: resolvedRuntime,
     router: {
       ...config.router,
       tabBarMode: config.router.tabBarMode || 'auto',
     },
     ui: {
       library: config.ui?.library || 'wot',
-      theme: config.ui?.theme || 'light',
-      darkmode: config.ui?.darkmode ?? false,
+      theme: resolvedThemeMode,
       navigationStyle: config.ui?.navigationStyle || 'default',
       schemaComponents: normalizeSchemaComponents(config.ui?.schemaComponents),
-      tokens: resolveThemeTokens(config.ui?.tokens || {}),
-      radius: {
-        ...defaultRadiusTokens,
-        ...(config.ui?.radius || {}),
-      },
-      spacing: {
-        ...defaultSpacingTokens,
-        ...(config.ui?.spacing || {}),
-      },
+      tokens: resolvedTokens,
+      radius: resolvedRadius,
+      spacing: resolvedSpacing,
     },
   }
 }
@@ -123,11 +172,15 @@ export function createUniTabBar(config: DuxConfig, pages: Array<Record<string, u
     return undefined
   }
 
+  const useThemeVars = isAutoTheme(manifest.config.ui.theme)
+  const fixedTheme = createUniTheme(manifest.config.ui.tokens)[resolveFixedTheme(manifest.config.ui.theme)]
+  const borderStyle: 'black' | 'white' = useThemeVars ? 'black' : fixedTheme.tabBorderStyle === 'white' ? 'white' : 'black'
+
   return {
-    color: manifest.config.ui.darkmode ? '@tabFontColor' : manifest.config.ui.tokens.tabColor,
-    selectedColor: manifest.config.ui.darkmode ? '@tabSelectedColor' : manifest.config.ui.tokens.tabSelectedColor,
-    backgroundColor: manifest.config.ui.darkmode ? '@tabBgColor' : manifest.config.ui.tokens.tabBackground,
-    borderStyle: manifest.config.ui.theme === 'dark' ? 'white' : 'black',
+    color: useThemeVars ? '@tabFontColor' : fixedTheme.tabFontColor,
+    selectedColor: useThemeVars ? '@tabSelectedColor' : fixedTheme.tabSelectedColor,
+    backgroundColor: useThemeVars ? '@tabBgColor' : fixedTheme.tabBgColor,
+    borderStyle,
     list: items.map((page) => ({
       pagePath: normalizePagePath(page.path),
       text: page.title || page.name,
@@ -139,14 +192,16 @@ export function createUniTabBar(config: DuxConfig, pages: Array<Record<string, u
 
 export function createUniGlobalStyle(config: DuxConfig) {
   const resolved = resolveDuxConfig(config)
+  const useThemeVars = isAutoTheme(resolved.ui.theme)
+  const fixedTheme = createUniTheme(resolved.ui.tokens)[resolveFixedTheme(resolved.ui.theme)]
 
   return {
-    backgroundColor: resolved.ui.darkmode ? '@bgColor' : resolved.ui.tokens.background,
-    backgroundColorBottom: resolved.ui.darkmode ? '@bgColorBottom' : resolved.ui.tokens.background,
-    backgroundColorTop: resolved.ui.darkmode ? '@bgColorTop' : resolved.ui.tokens.backgroundMuted,
-    backgroundTextStyle: resolved.ui.darkmode ? '@bgTxtStyle' : resolved.ui.tokens.navText === 'white' ? 'light' : 'dark',
-    navigationBarBackgroundColor: resolved.ui.darkmode ? '@navBgColor' : resolved.ui.tokens.navBackground,
-    navigationBarTextStyle: resolved.ui.darkmode ? '@navTxtStyle' : resolved.ui.tokens.navText,
+    backgroundColor: useThemeVars ? '@bgColor' : fixedTheme.bgColor,
+    backgroundColorBottom: useThemeVars ? '@bgColorBottom' : fixedTheme.bgColorBottom,
+    backgroundColorTop: useThemeVars ? '@bgColorTop' : fixedTheme.bgColorTop,
+    backgroundTextStyle: useThemeVars ? '@bgTxtStyle' : fixedTheme.bgTxtStyle,
+    navigationBarBackgroundColor: useThemeVars ? '@navBgColor' : fixedTheme.navBgColor,
+    navigationBarTextStyle: useThemeVars ? '@navTxtStyle' : fixedTheme.navTxtStyle,
     navigationBarTitleText: config.app.title,
     navigationStyle: resolved.ui.navigationStyle,
   }

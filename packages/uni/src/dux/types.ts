@@ -44,8 +44,7 @@ export interface DuxSpacingTokens {
 
 export interface DuxUiConfig {
   library?: 'wot' | 'none'
-  theme?: 'light' | 'dark'
-  darkmode?: boolean
+  theme?: 'auto' | 'light' | 'dark'
   navigationStyle?: 'default' | 'custom'
   schemaComponents?: DuxSchemaComponentInput[]
   tokens?: Partial<DuxThemeTokens>
@@ -89,8 +88,7 @@ export interface DuxConfig {
 export interface ResolvedDuxConfig extends DuxConfig {
   ui: {
     library: 'wot' | 'none'
-    theme: 'light' | 'dark'
-    darkmode: boolean
+    theme: 'auto' | 'light' | 'dark'
     navigationStyle: 'default' | 'custom'
     schemaComponents: DuxSchemaComponentConfig[]
     tokens: DuxThemeTokens

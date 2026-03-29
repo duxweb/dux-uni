@@ -103,8 +103,7 @@ function resolveUi(config: DuxConfig) {
 
   return {
     library: config.ui?.library || 'wot',
-    theme: config.ui?.theme || 'light',
-    darkmode: config.ui?.darkmode ?? false,
+    theme: config.ui?.theme || 'auto',
     navigationStyle: config.ui?.navigationStyle || 'default',
     schemaComponents,
     tokens: resolveThemeTokens(config.ui?.tokens || {}),

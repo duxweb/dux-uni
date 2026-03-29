@@ -1,6 +1,7 @@
-import type { Dict, UniAppContext } from '../types'
+import type { UniAppContext } from '../types'
 import { watch } from 'vue'
-import { createUniTheme } from '../dux/theme'
+import { createUniTheme } from '../dux/theme.ts'
+import { useThemeStore } from '../stores/theme.ts'
 
 export type UniResolvedTheme = 'light' | 'dark'
 
@@ -31,7 +32,7 @@ function applyNativeTheme(context: UniAppContext, theme: UniResolvedTheme) {
     return
   }
 
-  const palette = createUniTheme(tokens as Dict<string>)[theme]
+  const palette = createUniTheme(tokens)[theme]
 
   uni.setBackgroundColor?.({
     backgroundColor: palette.bgColor,
@@ -54,6 +55,13 @@ export function installNativeThemeRuntime(context: UniAppContext) {
 
   if (!options?.tokens) {
     return
+  }
+
+  const configuredMode = options.mode || 'system'
+  const pinia = context.pinia as Parameters<typeof useThemeStore>[0] | undefined
+
+  if (pinia && configuredMode !== 'system') {
+    useThemeStore(pinia).setThemePreference(configuredMode)
   }
 
   options.onSystemThemeChange?.(resolveSystemThemeSync(), context)
