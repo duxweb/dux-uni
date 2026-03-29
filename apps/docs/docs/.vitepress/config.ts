@@ -1,6 +1,6 @@
 import { withDuxTheme } from '@duxweb/vitepress-theme/config'
 
-const config = withDuxTheme({
+export default withDuxTheme({
   title: 'Dux Uni',
   description: '@duxweb/uni 与 @duxweb/uni-pro 文档',
   lang: 'zh-CN',
@@ -223,12 +223,3 @@ const config = withDuxTheme({
     },
   },
 })
-
-const alias = Array.isArray(config.vite?.resolve?.alias) ? config.vite.resolve.alias : []
-const dayjsAlias = alias.find(item => item && typeof item === 'object' && 'find' in item && String(item.find) === '/^dayjs$/')
-
-if (dayjsAlias && 'replacement' in dayjsAlias) {
-  dayjsAlias.replacement = 'dayjs/dayjs.min.js'
-}
-
-export default config
