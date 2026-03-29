@@ -1,0 +1,20 @@
+{
+  "name": "@duxweb/uni-docs",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "author": "DuxWeb",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vitepress dev docs --host 127.0.0.1 --port 5177",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs --host 127.0.0.1 --port 4177"
+  },
+  "dependencies": {
+    "@duxweb/vitepress-theme": "^1.1.6"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.31"
+  }
+}

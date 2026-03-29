@@ -1,0 +1,45 @@
+{
+  "name": "@duxweb/uni-pro",
+  "version": "0.1.1",
+  "description": "Wot UI adaptation layer for Dux Uni.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts",
+    "./types": "./src/types.ts",
+    "./components/AsyncColPicker.vue": "./src/components/AsyncColPicker.vue",
+    "./components/AsyncForm.vue": "./src/components/AsyncForm.vue",
+    "./components/AsyncPicker.vue": "./src/components/AsyncPicker.vue",
+    "./components/AsyncPickerView.vue": "./src/components/AsyncPickerView.vue",
+    "./components/AsyncUpload.vue": "./src/components/AsyncUpload.vue",
+    "./components/DuxRoot.vue": "./src/components/DuxRoot.vue",
+    "./components/DuxOverlayHost.vue": "./src/components/DuxOverlayHost.vue",
+    "./components/DuxOverlayPresenter.vue": "./src/components/DuxOverlayPresenter.vue",
+    "./components/DuxOverlayPageShell.vue": "./src/components/DuxOverlayPageShell.vue",
+    "./components/DuxModalPage.vue": "./src/components/DuxModalPage.vue",
+    "./components/DuxDrawerPage.vue": "./src/components/DuxDrawerPage.vue",
+    "./components/ProAppProvider.vue": "./src/components/ProAppProvider.vue",
+    "./components/ProPageShell.vue": "./src/components/ProPageShell.vue",
+    "./components/ProSection.vue": "./src/components/ProSection.vue",
+    "./components/ProEmpty.vue": "./src/components/ProEmpty.vue"
+  },
+  "dependencies": {
+    "@duxweb/uni": "workspace:*",
+    "vue": "3.4.21"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0",
+    "wot-design-uni": "^1.14.0"
+  },
+  "devDependencies": {
+    "wot-design-uni": "^1.14.0"
+  }
+}

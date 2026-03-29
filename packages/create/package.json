@@ -1,0 +1,27 @@
+{
+  "name": "@duxweb/uni-create",
+  "version": "0.1.1",
+  "description": "Create a Dux Uni project from the official template.",
+  "license": "MIT",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "dux-uni-create": "./bin/create.mjs"
+  },
+  "dependencies": {
+    "prompts": "^2.4.2"
+  },
+  "files": [
+    "bin",
+    "template",
+    "README.md"
+  ],
+  "duxTemplate": {
+    "templateName": "template",
+    "uniVersion": "0.1.1",
+    "uniProVersion": "0.1.1",
+    "defaultUi": "pro"
+  }
+}

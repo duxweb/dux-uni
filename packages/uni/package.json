@@ -1,0 +1,68 @@
+{
+  "name": "@duxweb/uni",
+  "version": "0.1.1",
+  "description": "Headless application framework for uni-app projects.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "dux-uni": "./bin/dux-uni.mjs"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@dcloudio/uni-app": "^3.0.0",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@dcloudio/uni-app": "3.0.0-5000520260324001",
+    "@types/node": "^24.5.2",
+    "pinia": "2.1.7",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4",
+    "vue": "3.4.21"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.28.5",
+    "@babel/types": "^7.28.5",
+    "@tanstack/match-sorter-utils": "^8.19.4",
+    "@tanstack/query-core": "^5.95.2",
+    "@tanstack/vue-query": "^5.95.2",
+    "@vue/compiler-sfc": "3.4.21",
+    "@vueuse/core": "12.8.2",
+    "@vueuse/shared": "12.8.2",
+    "@uni-helper/uni-network": "^0.23.1",
+    "@uni-helper/uni-promises": "^0.2.1",
+    "@uni-helper/uni-use": "^0.19.17",
+    "@vue/devtools-api": "^6.6.4",
+    "fast-glob": "^3.3.3",
+    "fast-decode-uri-component": "^1.0.1",
+    "fast-querystring": "^1.1.2",
+    "lodash.merge": "^4.6.2",
+    "mitt": "^3.0.1",
+    "statuses-es": "^2.0.6",
+    "vue-demi": "^0.14.10"
+  }
+}

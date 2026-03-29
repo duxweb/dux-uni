@@ -1,0 +1,52 @@
+{
+  "name": "dux-uni-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.31.0",
+  "pnpm": {
+    "overrides": {
+      "unconfig": "7.3.2",
+      "@dcloudio/types": "3.4.28"
+    }
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "sync:create-template-versions": "node ./scripts/sync-create-template-versions.mjs",
+    "version": "changeset version && pnpm run sync:create-template-versions && pnpm install --no-frozen-lockfile",
+    "release:check": "pnpm --filter @duxweb/uni test && pnpm --filter @duxweb/uni typecheck && pnpm --filter @duxweb/uni-starter type-check && pnpm --filter @duxweb/uni-docs build",
+    "release:dry-run:uni": "pnpm run release:check && pnpm --filter @duxweb/uni publish --dry-run --access public --no-git-checks",
+    "release:dry-run:uni-pro": "pnpm run release:check && pnpm --filter @duxweb/uni-pro publish --dry-run --access public --no-git-checks",
+    "release:dry-run:create": "pnpm run release:check && pnpm --filter @duxweb/uni-create publish --dry-run --access public --no-git-checks",
+    "release": "pnpm run release:check && pnpm run sync:create-template-versions && changeset publish",
+    "docs:dev": "pnpm --filter @duxweb/uni-docs dev",
+    "docs:build": "pnpm --filter @duxweb/uni-docs build",
+    "docs:preview": "pnpm --filter @duxweb/uni-docs preview",
+    "docs:open": "open http://127.0.0.1:5177 || open http://127.0.0.1:5178 || open http://127.0.0.1:5179",
+    "template:dev": "pnpm template:dev:h5",
+    "template:dev:all": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-template dev",
+    "template:dev:h5": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-template dev h5",
+    "template:dev:app": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-template dev app",
+    "template:dev:wx": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-template dev mp-weixin",
+    "template:build": "pnpm template:build:h5",
+    "template:build:h5": "pnpm --filter @duxweb/uni-template build h5",
+    "template:build:app": "pnpm --filter @duxweb/uni-template build app",
+    "template:build:wx": "pnpm --filter @duxweb/uni-template build mp-weixin",
+    "template:open": "open http://127.0.0.1:5184 || open http://127.0.0.1:5185 || open http://127.0.0.1:5186",
+    "starter:dev": "pnpm starter:dev:h5",
+    "starter:dev:all": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-starter dev",
+    "starter:dev:app": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-starter dev app",
+    "starter:dev:h5": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-starter dev h5",
+    "starter:open": "open http://127.0.0.1:5174 || open http://127.0.0.1:5175 || open http://127.0.0.1:5176",
+    "starter:dev:wx": "CHOKIDAR_USEPOLLING=1 pnpm --filter @duxweb/uni-starter dev mp-weixin",
+    "starter:build": "pnpm starter:build:h5",
+    "starter:build:h5": "pnpm --filter @duxweb/uni-starter build h5",
+    "starter:build:app": "pnpm --filter @duxweb/uni-starter build app",
+    "starter:build:wx": "pnpm --filter @duxweb/uni-starter build mp-weixin",
+    "test": "pnpm --filter @duxweb/uni test",
+    "typecheck": "pnpm --filter @duxweb/uni typecheck"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.30.0"
+  }
+}

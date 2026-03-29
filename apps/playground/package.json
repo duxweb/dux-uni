@@ -1,0 +1,10 @@
+{
+  "name": "@duxweb/uni-playground",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@duxweb/uni": "workspace:*",
+    "pinia": "2.1.7",
+    "vue": "^3.5.31"
+  }
+}
