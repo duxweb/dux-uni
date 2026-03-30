@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { resolve } from 'node:path'
+import { existsSync } from 'node:fs'
 import UniPackage from '@dcloudio/vite-plugin-uni'
 import { uniuseAutoImports } from '@uni-helper/uni-use'
 import UnoCSS from 'unocss/vite'
@@ -11,7 +12,7 @@ const uni = typeof UniPackage === 'function'
   ? UniPackage
   : UniPackage.default
 
-const optimizeDepsInclude = ['@duxweb/uni', '@duxweb/uni-pro', 'lodash.merge', '@vueuse/shared']
+const optimizeDepsInclude = ['lodash.merge', '@vueuse/shared']
 const autoImportExcept = [
   'tryOnScopeDispose',
   'useNetwork',
@@ -72,6 +73,39 @@ export function createUniAppViteConfig(options: {
   const dedupe = ['vue']
   const platform = process.env.UNI_PLATFORM || process.env.VITE_UNI_PLATFORM || ''
   const isH5 = platform === 'h5'
+  const workspaceRoot = resolve(options.appRoot, '../..')
+  const uniSourcePath = resolve(workspaceRoot, 'packages/uni/src/index.ts')
+  const uniProSourcePath = resolve(workspaceRoot, 'packages/uni-pro/src/index.ts')
+  const uniProSourceDir = resolve(workspaceRoot, 'packages/uni-pro/src')
+
+  const generatedUniSchemaRendererPath = resolve(options.appRoot, 'src/runtime/generated/UniSchemaRenderer.vue')
+
+  if (existsSync(uniSourcePath)) {
+    alias.push({
+      find: /^@duxweb\/uni$/,
+      replacement: uniSourcePath,
+    })
+  }
+
+  if (existsSync(generatedUniSchemaRendererPath)) {
+    alias.push({
+      find: /^@duxweb\/uni\/components\/UniSchemaRenderer\.vue$/,
+      replacement: generatedUniSchemaRendererPath,
+    })
+  }
+
+  if (isH5 && existsSync(uniProSourcePath)) {
+    alias.push(
+      {
+        find: /^@duxweb\/uni-pro$/,
+        replacement: uniProSourcePath,
+      },
+      {
+        find: /^@duxweb\/uni-pro\/(.*)$/,
+        replacement: `${uniProSourceDir}/$1`,
+      },
+    )
+  }
 
   if (options.withWotAlias) {
     const wotPackagePath = resolve(options.appRoot, 'node_modules/wot-design-uni')

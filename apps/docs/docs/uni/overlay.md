@@ -151,6 +151,14 @@ await drawer.open({
 
 抽屉内容组件的推荐结构与 `modal` 相同，只是页面壳改成 `DuxDrawerPage`。
 
+当前移动端推荐约定：
+
+- `modal`
+  适合居中的编辑、确认和短表单
+- `drawer`
+  默认优先按底部抽屉使用，更适合筛选器、排序面板和移动端配置面板
+- 如果是 `frame: 'page'` 的表单型弹层，优先配合 `DuxModalPage` / `DuxDrawerPage`
+
 ## useOverlayContext
 
 用于在弹层内容组件内部读取 payload、提交结果或主动关闭当前弹层。

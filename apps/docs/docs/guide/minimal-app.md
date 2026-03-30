@@ -57,7 +57,7 @@ export function createApp() {
   const pinia = createPinia()
 
   app.use(pinia) // 安装 Pinia
-  installUniApp(app, dux) // 安装 Dux Uni runtime
+  installUniApp(app, dux, pinia) // 安装 Dux Uni runtime，并桥接主题/状态运行时
 
   return {
     app,

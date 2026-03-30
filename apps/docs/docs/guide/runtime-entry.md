@@ -24,7 +24,7 @@ Pinia 插件、全局样式、Vue 安装         => main.ts
 ```mermaid
 flowchart TD
   A["dux.config.ts<br/>提供应用配置"] --> B["dux.ts<br/>createUni(...) 创建应用"]
-  B --> C["main.ts<br/>installUniApp(app, dux)"]
+  B --> C["main.ts<br/>installUniApp(app, dux, pinia)"]
   C --> D["App.vue<br/>setupUniAppLifecycle(dux)"]
   D --> E["页面开始按模块运行"]
 ```
@@ -52,14 +52,15 @@ flowchart TD
 import { createSSRApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
-import { dux, installUniApp } from './dux'
+import { installUniApp } from '@duxweb/uni'
+import { dux } from './dux'
 
 export function createApp() {
   const app = createSSRApp(App)
   const pinia = createPinia()
 
   app.use(pinia) // 安装 Pinia
-  installUniApp(app, dux) // 安装 Dux Uni runtime
+  installUniApp(app, dux, pinia) // 安装 Dux Uni runtime
 
   return {
     app,

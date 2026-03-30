@@ -7,8 +7,9 @@
 
 <script setup lang="ts">
 import type { DemoSchemaPayload } from '@/demo/types'
-import { UniSchemaRenderer, useCustom, usePageTitle, useThemePreference } from '@duxweb/uni'
-import { computed, reactive, ref } from 'vue'
+import { useCustom, usePageTitle, useThemePreference } from '@duxweb/uni'
+import UniSchemaRenderer from '@duxweb/uni/components/UniSchemaRenderer.vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { wrapAsyncEvent } from '@/utils/async'
 
 const schemaMode = ref('预览')
@@ -28,13 +29,20 @@ const schemaQuery = useCustom<DemoSchemaPayload>({
 
 const schemaPayload = computed(() => schemaQuery.data.value?.data)
 const schema = computed(() => schemaPayload.value?.schema || [])
-const schemaBindings = computed(() => ({
+const schemaBindings = reactive({
   state: schemaState,
   request: {
-    cards: schemaPayload.value?.cards || [],
-    subtitle: schemaPayload.value?.subtitle || '',
+    cards: [] as DemoSchemaPayload['cards'],
+    subtitle: '',
   },
-}))
+})
+
+watch(schemaPayload, (value) => {
+  schemaBindings.request.cards = value?.cards || []
+  schemaBindings.request.subtitle = value?.subtitle || ''
+}, {
+  immediate: true,
+})
 
 const schemaCodeStyle = computed(() => ({
   background: currentTheme.value === 'dark'

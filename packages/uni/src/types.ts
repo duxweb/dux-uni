@@ -399,6 +399,17 @@ export interface UniRenderedSchemaNode {
   binding?: unknown
 }
 
+export interface UniSchemaTemplateNode extends UniSchemaNode {
+  __bindings?: UniSchemaBindings
+}
+
+export type UniSchemaTemplateEntry = string | UniSchemaTemplateNode
+
+export interface UniSchemaTemplateRuntimeNode extends Omit<UniRenderedSchemaNode, 'children' | 'slots'> {
+  children?: UniSchemaTemplateEntry[]
+  slots?: Record<string, UniSchemaTemplateEntry[]>
+}
+
 export interface UniSchemaComponentMap {
   [name: string]: unknown
 }

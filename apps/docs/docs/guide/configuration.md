@@ -57,6 +57,7 @@ router: {
 - `tabBarRenderer`
   决定界面上显示原生 tabbar 还是业务自定义 tabbar
 - 推荐移动端一级导航使用 `tabBarMode: 'native'`，如果需要自定义外观，再配 `tabBarRenderer: 'custom'`
+- `tabBarRenderer` 不会改变底层导航方式，只影响视觉层
 
 推荐优先写页面名：
 
@@ -197,6 +198,7 @@ onError
 - 走 `defineDuxConfig() + resolveDuxConfig()` 的标准项目，通常不需要自己手写这一段
 - 只要走 `defineDuxConfig() + resolveDuxConfig()`，运行时就会自动注入默认的 `themeRuntime`
 - 只有裸用 `defineUniConfig()` / `createUni()` 时，才更常需要手动配置
+- 如果你希望主题 store、系统主题探测和原生主题同步一起工作，`installUniApp(app, dux, pinia)` 应传入 `pinia`
 
 标准项目等价于自动生成：
 

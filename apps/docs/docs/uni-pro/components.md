@@ -10,19 +10,22 @@
 ## DuxRoot
 
 ```vue
-<DuxRoot :theme="theme" :tokens="tokens">
+<DuxRoot :theme="currentTheme" :tokens="tokens">
   <slot />
 </DuxRoot>
 ```
 
 ```vue
 <script setup lang="ts">
+import { useThemePreference } from '@duxweb/uni'
 import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
+
+const { currentTheme } = useThemePreference()
 </script>
 
 <template>
   <DuxRoot
-    theme="light"
+    :theme="currentTheme"
     :tokens="{
       primary: '#2563eb',
     }"
@@ -42,7 +45,7 @@ import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
 ## ProAppProvider
 
 ```vue
-<ProAppProvider :theme="theme" :tokens="tokens">
+<ProAppProvider :theme="currentTheme" :tokens="tokens">
   <slot />
 </ProAppProvider>
 ```

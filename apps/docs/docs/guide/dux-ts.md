@@ -21,6 +21,20 @@ export const dux = createUni(defineUniConfig({
 }))
 ```
 
+推荐约定：
+
+```text
+tabBarMode      => 决定 tab 页是 switchTab 还是 reLaunch
+tabBarRenderer  => 决定界面上显示原生 tabbar 还是自定义 tabbar
+```
+
+移动端一级导航如果既想保留 tab 页缓存，又想自定义外观，优先使用：
+
+```ts
+tabBarMode: 'native'
+tabBarRenderer: 'custom'
+```
+
 ## 这里主要负责什么
 
 ```text

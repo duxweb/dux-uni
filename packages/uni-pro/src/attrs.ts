@@ -1,13 +1,21 @@
 import { computed } from 'vue'
 
-const blockedAttrs = new Set([
-  'virtualHostStyle',
-  'virtualHostClass',
-])
+function normalizeAttrName(name: string) {
+  return name.replace(/-/g, '').toLowerCase()
+}
+
+function isVirtualHostAttr(name: string) {
+  return normalizeAttrName(name).startsWith('virtualhost')
+}
 
 export function sanitizeAttrs(input: Record<string, unknown>) {
   return Object.fromEntries(
-    Object.entries(input).filter(([key, value]) => value !== undefined && !blockedAttrs.has(key)),
+    Object.entries(input).filter(([key, value]) => {
+      if (value === undefined || isVirtualHostAttr(key)) {
+        return false
+      }
+      return true
+    }),
   )
 }
 

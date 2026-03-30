@@ -6,13 +6,92 @@ import { useThemeStore } from '../stores/theme.ts'
 export type UniResolvedTheme = 'light' | 'dark'
 export type UniThemePreferenceCapability = 'manual' | 'system-only'
 
-export function resolveUniPlatformSync() {
-  const getSystemInfoSync = (uni as typeof uni & {
-    getSystemInfoSync?: () => { uniPlatform?: string }
-  }).getSystemInfoSync
+let cachedPlatform = ''
 
-  if (typeof getSystemInfoSync === 'function') {
-    return String(getSystemInfoSync().uniPlatform || '').toLowerCase()
+export function resolveUniPlatformSync() {
+  if (cachedPlatform) {
+    return cachedPlatform
+  }
+
+  const envPlatform = (
+    (typeof process !== 'undefined' && process.env?.UNI_PLATFORM)
+    || (typeof process !== 'undefined' && process.env?.VITE_UNI_PLATFORM)
+  )
+
+  if (envPlatform) {
+    cachedPlatform = String(envPlatform).toLowerCase()
+    return cachedPlatform
+  }
+
+  const runtimeConfig = (globalThis as typeof globalThis & {
+    __uniConfig?: { platform?: unknown }
+  }).__uniConfig
+
+  if (runtimeConfig?.platform) {
+    cachedPlatform = String(runtimeConfig.platform).toLowerCase()
+    return cachedPlatform
+  }
+
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    cachedPlatform = 'h5'
+    return cachedPlatform
+  }
+
+  const appBase = (uni as typeof uni & {
+    getAppBaseInfo?: () => { hostName?: string, uniPlatform?: string }
+  }).getAppBaseInfo
+
+  if (typeof appBase === 'function') {
+    const info = appBase() as { hostName?: string, uniPlatform?: string }
+
+    if (info?.uniPlatform) {
+      cachedPlatform = String(info.uniPlatform).toLowerCase()
+      return cachedPlatform
+    }
+  }
+
+  const globals = globalThis as typeof globalThis & {
+    wx?: unknown
+    my?: unknown
+    swan?: unknown
+    tt?: unknown
+    ks?: unknown
+    qq?: unknown
+    jd?: unknown
+    plus?: unknown
+  }
+
+  if (globals.wx) {
+    cachedPlatform = 'mp-weixin'
+    return cachedPlatform
+  }
+  if (globals.my) {
+    cachedPlatform = 'mp-alipay'
+    return cachedPlatform
+  }
+  if (globals.swan) {
+    cachedPlatform = 'mp-baidu'
+    return cachedPlatform
+  }
+  if (globals.tt) {
+    cachedPlatform = 'mp-toutiao'
+    return cachedPlatform
+  }
+  if (globals.ks) {
+    cachedPlatform = 'mp-kuaishou'
+    return cachedPlatform
+  }
+  if (globals.qq) {
+    cachedPlatform = 'mp-qq'
+    return cachedPlatform
+  }
+  if (globals.jd) {
+    cachedPlatform = 'mp-jd'
+    return cachedPlatform
+  }
+  if (globals.plus) {
+    cachedPlatform = 'app-plus'
+    return cachedPlatform
   }
 
   return ''
@@ -48,11 +127,115 @@ export function resolveSystemThemeSync(): UniResolvedTheme {
   return 'light'
 }
 
-function applyNativeTheme(context: UniAppContext, theme: UniResolvedTheme) {
+function resolveCurrentPageCountSync() {
+  const getPages = (globalThis as typeof globalThis & {
+    getCurrentPages?: () => unknown[]
+  }).getCurrentPages
+
+  if (typeof getPages !== 'function') {
+    return 0
+  }
+
+  try {
+    const pages = getPages()
+    return Array.isArray(pages) ? pages.length : 0
+  }
+  catch {
+    return 0
+  }
+}
+
+function shouldDeferNavigationBarApply() {
+  const platform = resolveUniPlatformSync()
+
+  if (platform !== 'h5' && platform !== 'web') {
+    return false
+  }
+
+  return resolveCurrentPageCountSync() === 0
+}
+
+function resolveUniErrorMessage(error: unknown) {
+  if (typeof error === 'string') {
+    return error
+  }
+
+  if (error && typeof error === 'object') {
+    const data = error as { errMsg?: unknown, message?: unknown }
+
+    if (typeof data.errMsg === 'string') {
+      return data.errMsg
+    }
+
+    if (typeof data.message === 'string') {
+      return data.message
+    }
+  }
+
+  return ''
+}
+
+function shouldRetryNavigationBarApply(error: unknown) {
+  return /page not found/i.test(resolveUniErrorMessage(error))
+}
+
+function applyNavigationBarTheme(
+  backgroundColor: string,
+  frontColor: '#ffffff' | '#000000',
+  onRetry: () => void,
+) {
+  if (shouldDeferNavigationBarApply()) {
+    return false
+  }
+
+  const apply = uni.setNavigationBarColor
+
+  if (typeof apply !== 'function') {
+    return true
+  }
+
+  const request = {
+    frontColor,
+    backgroundColor,
+    animation: {
+      duration: 0,
+      timingFunc: 'linear' as const,
+    },
+    fail(error: unknown) {
+      if (shouldRetryNavigationBarApply(error)) {
+        onRetry()
+      }
+    },
+  }
+
+  try {
+    const result = apply(request as any)
+
+    if (result && typeof (result as Promise<unknown>).catch === 'function') {
+      void (result as Promise<unknown>).catch((error: unknown) => {
+        if (shouldRetryNavigationBarApply(error)) {
+          onRetry()
+        }
+      })
+    }
+
+    return true
+  }
+  catch (error) {
+    if (shouldRetryNavigationBarApply(error)) {
+      onRetry()
+      return false
+    }
+
+    throw error
+  }
+}
+
+function applyNativeTheme(context: UniAppContext, theme: UniResolvedTheme, onRetry: () => void) {
   const tokens = context.config.themeRuntime?.tokens
 
   if (!tokens) {
-    return
+    return true
   }
 
   const palette = createUniTheme(tokens)[theme]
@@ -63,14 +246,11 @@ function applyNativeTheme(context: UniAppContext, theme: UniResolvedTheme) {
     backgroundColorBottom: palette.bgColorBottom,
   })
 
-  uni.setNavigationBarColor?.({
-    frontColor: palette.navTxtStyle === 'white' ? '#ffffff' : '#000000',
-    backgroundColor: palette.navBgColor,
-    animation: {
-      duration: 0,
-      timingFunc: 'linear',
-    },
-  })
+  return applyNavigationBarTheme(
+    palette.navBgColor,
+    palette.navTxtStyle === 'white' ? '#ffffff' : '#000000',
+    onRetry,
+  )
 }
 
 export function installNativeThemeRuntime(context: UniAppContext) {
@@ -89,15 +269,69 @@ export function installNativeThemeRuntime(context: UniAppContext) {
 
   options.onSystemThemeChange?.(resolveSystemThemeSync(), context)
 
+  let pendingTheme: UniResolvedTheme | undefined
+  let retryCount = 0
+  let retryTimer: ReturnType<typeof setTimeout> | undefined
+  const maxRetryCount = 12
+
+  const flushPendingTheme = () => {
+    if (!pendingTheme) {
+      return
+    }
+
+    const theme = pendingTheme
+    const applied = applyNativeTheme(context, theme, () => {
+      scheduleThemeApply(theme)
+    })
+
+    if (applied) {
+      pendingTheme = undefined
+      retryCount = 0
+    }
+  }
+
+  const scheduleThemeApply = (theme: UniResolvedTheme, reset = false) => {
+    pendingTheme = theme
+
+    if (reset) {
+      retryCount = 0
+      if (retryTimer) {
+        clearTimeout(retryTimer)
+        retryTimer = undefined
+      }
+    }
+
+    if (retryTimer || retryCount >= maxRetryCount) {
+      return
+    }
+
+    const delay = retryCount === 0 ? 0 : 16
+    retryCount += 1
+    retryTimer = setTimeout(() => {
+      retryTimer = undefined
+      flushPendingTheme()
+    }, delay)
+  }
+
+  const requestThemeApply = (theme: UniResolvedTheme) => {
+    pendingTheme = theme
+    retryCount = 0
+    if (retryTimer) {
+      clearTimeout(retryTimer)
+      retryTimer = undefined
+    }
+    flushPendingTheme()
+  }
+
   if (typeof options.getTheme === 'function') {
     watch(() => options.getTheme?.(context) || 'light', (theme) => {
-      applyNativeTheme(context, theme === 'dark' ? 'dark' : 'light')
+      requestThemeApply(theme === 'dark' ? 'dark' : 'light')
     }, {
       immediate: true,
     })
   }
   else {
-    applyNativeTheme(context, resolveSystemThemeSync())
+    requestThemeApply(resolveSystemThemeSync())
   }
 
   uni.onThemeChange?.(({ theme }) => {
@@ -105,7 +339,7 @@ export function installNativeThemeRuntime(context: UniAppContext) {
     options.onSystemThemeChange?.(resolvedTheme, context)
 
     if (typeof options.getTheme !== 'function') {
-      applyNativeTheme(context, resolvedTheme)
+      requestThemeApply(resolvedTheme)
     }
   })
 }

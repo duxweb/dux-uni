@@ -8,9 +8,13 @@ import type {
   UniSchemaComponentRegistration,
   UniSchemaNode,
   UniSchemaRendererOptions,
+  UniSchemaTemplateEntry,
+  UniSchemaTemplateNode,
+  UniSchemaTemplateRuntimeNode,
 } from '../types'
 import { computed, defineComponent, Fragment, h, isRef, markRaw } from 'vue'
 import { useUniApp } from '../app/install'
+import { resolveUniPlatformSync } from '../runtime/theme'
 
 const defaultAllowedTags = [
   'view',
@@ -50,6 +54,101 @@ function pascalCase(value: string) {
 
 function isPlainObject(value: unknown): value is Dict {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isMiniProgramPlatform() {
+  const platform = resolveUniPlatformSync()
+  return platform.startsWith('mp-')
+}
+
+function appendStyleValue(style: string | Dict | undefined, key: string, value: unknown) {
+  if (typeof value === 'undefined' || value === null || value === '') {
+    return style
+  }
+
+  if (typeof style === 'string') {
+    const normalized = style.trim()
+    const suffix = normalized && !normalized.endsWith(';') ? ';' : ''
+    return `${normalized}${suffix}${key}:${String(value)};`
+  }
+
+  if (isPlainObject(style)) {
+    return {
+      ...style,
+      [key]: value,
+    }
+  }
+
+  return {
+    [key]: value,
+  } satisfies Dict
+}
+
+function applySchemaGapFallback(
+  style: string | Dict | undefined,
+  children: Array<{ style?: string | Dict } | string> | undefined,
+) {
+  if (!isMiniProgramPlatform() || !children?.length || !isPlainObject(style)) {
+    return {
+      style,
+      children,
+    }
+  }
+
+  const display = String(style.display || '').toLowerCase()
+  if (display !== 'flex' && display !== 'inline-flex') {
+    return {
+      style,
+      children,
+    }
+  }
+
+  const direction = String(style.flexDirection || 'row').toLowerCase()
+  const gap = style.gap
+  const rowGap = style.rowGap ?? gap
+  const columnGap = style.columnGap ?? gap
+
+  let spacingKey: 'marginTop' | 'marginLeft' | undefined
+  let spacingValue: unknown
+
+  if (direction.startsWith('column') && typeof rowGap !== 'undefined') {
+    spacingKey = 'marginTop'
+    spacingValue = rowGap
+  }
+  else if (direction.startsWith('row') && typeof columnGap !== 'undefined') {
+    spacingKey = 'marginLeft'
+    spacingValue = columnGap
+  }
+
+  if (!spacingKey || typeof spacingValue === 'undefined') {
+    return {
+      style,
+      children,
+    }
+  }
+
+  const nextStyle = {
+    ...style,
+    gap: undefined,
+    rowGap: undefined,
+    columnGap: undefined,
+  }
+
+  const nextChildren = children.map((child, index) => {
+    if (index === 0 || typeof child === 'string') {
+      return child
+    }
+
+    return {
+      ...child,
+      style: appendStyleValue(child.style, spacingKey, spacingValue),
+    }
+  })
+
+  return {
+    style: nextStyle,
+    children: nextChildren,
+  }
 }
 
 function readPath(source: Dict, path: string): unknown {
@@ -339,21 +438,23 @@ function normalizeSchemaNode(
   const text = typeof node.text !== 'undefined'
     ? resolveSchemaValue(node.text, bindings)
     : binding
-  const children = normalizeSchemaChildren(node.children, bindings, options)
+  const normalizedChildren = normalizeSchemaChildren(node.children, bindings, options)
   const slots = normalizeSchemaSlots(node.slots, bindings, options)
   const actions = node.actions ? resolveSchemaValue(node.actions, bindings) : undefined
+  const resolvedStyle = resolveSchemaValue(node.style, bindings)
+  const gapFallback = applySchemaGapFallback(resolvedStyle, normalizedChildren)
 
   return [{
     tag,
     key: node.key,
     props: resolveSchemaProps(node, bindings),
     class: typeof node.class === 'string' ? String(resolveTemplateString(node.class, bindings) ?? '') : node.class,
-    style: resolveSchemaValue(node.style, bindings),
+    style: gapFallback.style,
     text,
     model: node.model,
     modelProp: node.modelProp,
     disabled: node.disabledWhen ? toBoolean(resolveSchemaValue(`{{${node.disabledWhen}}}`, bindings)) : undefined,
-    children,
+    children: gapFallback.children as Array<UniRenderedSchemaNode | string> | undefined,
     slots,
     actions,
     binding,
@@ -460,7 +561,214 @@ function normalizeSchemaNodeList(
   return output
 }
 
-function resolveSchemaComponent(
+function attachTemplateBindings(
+  node: UniSchemaNode,
+  bindings: UniSchemaBindings,
+): UniSchemaTemplateNode {
+  return {
+    ...node,
+    __bindings: bindings,
+  }
+}
+
+function createTemplateNodeEntries(
+  node: UniSchemaNode,
+  bindings: UniSchemaBindings,
+): UniSchemaTemplateEntry[] {
+  if (node.forEach) {
+    const collection = resolveSchemaValue(`{{${node.forEach}}}`, bindings)
+    if (!Array.isArray(collection)) {
+      return []
+    }
+
+    const clonedNode = {
+      ...node,
+      forEach: undefined,
+    }
+
+    return collection.flatMap((item, index) => createTemplateNodeEntries(clonedNode, {
+      ...bindings,
+      item,
+      index,
+    }))
+  }
+
+  const tag = resolveTagName(node)
+  if (!tag) {
+    return []
+  }
+
+  return [attachTemplateBindings(node, bindings)]
+}
+
+function normalizeSchemaTemplateEntryList(
+  nodes: Array<string | UniSchemaNode>,
+  bindings: UniSchemaBindings,
+): UniSchemaTemplateEntry[] {
+  const output: UniSchemaTemplateEntry[] = []
+  let chainActive = false
+  let chainMatched = false
+  let switchActive = false
+  let switchMatched = false
+  let switchValue: unknown
+
+  nodes.forEach((node) => {
+    if (typeof node === 'string') {
+      chainActive = false
+      chainMatched = false
+      switchActive = false
+      switchMatched = false
+      switchValue = undefined
+      output.push(String(resolveTemplateString(node, bindings) ?? ''))
+      return
+    }
+
+    if (isSwitchNode(node)) {
+      if (typeof node.switch === 'string') {
+        switchActive = true
+        switchMatched = false
+        switchValue = resolveSchemaValue(`{{${node.switch}}}`, bindings)
+      }
+
+      if (!switchActive) {
+        return
+      }
+
+      if (node.defaultCase) {
+        if (!switchMatched) {
+          output.push(...createTemplateNodeEntries(stripSwitchNode(node), bindings))
+        }
+        switchActive = false
+        switchMatched = false
+        switchValue = undefined
+        return
+      }
+
+      if (typeof node.case !== 'undefined') {
+        const caseValue = resolveSchemaValue(node.case, bindings)
+        if (!switchMatched && compareSwitchValue(switchValue, caseValue)) {
+          output.push(...createTemplateNodeEntries(stripSwitchNode(node), bindings))
+          switchMatched = true
+        }
+        return
+      }
+    }
+
+    if (!isConditionalNode(node)) {
+      chainActive = false
+      chainMatched = false
+      switchActive = false
+      switchMatched = false
+      switchValue = undefined
+      output.push(...createTemplateNodeEntries(node, bindings))
+      return
+    }
+
+    if (node.else === true) {
+      if (chainActive && !chainMatched) {
+        output.push(...createTemplateNodeEntries(stripConditionalNode(node), bindings))
+      }
+      chainActive = false
+      chainMatched = false
+      return
+    }
+
+    if (typeof node.elseIf === 'string') {
+      if (!chainActive) {
+        chainActive = true
+        chainMatched = false
+      }
+
+      if (!chainMatched && checkSchemaCondition(node.elseIf, bindings)) {
+        output.push(...createTemplateNodeEntries(stripConditionalNode(node), bindings))
+        chainMatched = true
+      }
+      return
+    }
+
+    chainActive = true
+    chainMatched = false
+
+    if (checkSchemaCondition(resolveConditionExpression(node), bindings)) {
+      output.push(...createTemplateNodeEntries(stripConditionalNode(node), bindings))
+      chainMatched = true
+    }
+  })
+
+  return output
+}
+
+export function resolveSchemaTemplateEntries(
+  children: UniSchemaNode['children'] | undefined | UniSchemaNode[],
+  bindings: UniSchemaBindings = {},
+): UniSchemaTemplateEntry[] {
+  if (typeof children === 'undefined' || children === null) {
+    return []
+  }
+
+  if (typeof children === 'string') {
+    return [String(resolveTemplateString(children, bindings) ?? '')]
+  }
+
+  if (Array.isArray(children)) {
+    return normalizeSchemaTemplateEntryList(children, bindings)
+  }
+
+  return createTemplateNodeEntries(children, bindings)
+}
+
+function resolveSchemaTemplateSlots(
+  slots: UniSchemaNode['slots'],
+  bindings: UniSchemaBindings,
+) {
+  if (!slots) {
+    return undefined
+  }
+
+  return Object.entries(slots).reduce<Record<string, UniSchemaTemplateEntry[]>>((output, [name, content]) => {
+    const entries = resolveSchemaTemplateEntries(content, bindings)
+    if (entries.length) {
+      output[name] = entries
+    }
+    return output
+  }, {})
+}
+
+export function resolveSchemaTemplateNode(
+  node: UniSchemaNode,
+  bindings: UniSchemaBindings = {},
+): UniSchemaTemplateRuntimeNode | null {
+  const tag = resolveTagName(node)
+  if (!tag) {
+    return null
+  }
+
+  const binding = node.bind ? resolveSchemaValue(`{{${node.bind}}}`, bindings) : undefined
+  const text = typeof node.text !== 'undefined'
+    ? resolveSchemaValue(node.text, bindings)
+    : binding
+  const templateChildren = resolveSchemaTemplateEntries(node.children, bindings)
+  const resolvedStyle = resolveSchemaValue(node.style, bindings)
+  const gapFallback = applySchemaGapFallback(resolvedStyle, templateChildren)
+
+  return {
+    tag,
+    key: node.key,
+    props: resolveSchemaProps(node, bindings),
+    class: typeof node.class === 'string' ? String(resolveTemplateString(node.class, bindings) ?? '') : node.class,
+    style: gapFallback.style,
+    text,
+    model: node.model,
+    modelProp: node.modelProp,
+    disabled: node.disabledWhen ? toBoolean(resolveSchemaValue(`{{${node.disabledWhen}}}`, bindings)) : undefined,
+    children: gapFallback.children as UniSchemaTemplateEntry[] | undefined,
+    slots: resolveSchemaTemplateSlots(node.slots, bindings),
+    actions: node.actions ? resolveSchemaValue(node.actions, bindings) : undefined,
+    binding,
+  }
+}
+
+export function resolveSchemaComponent(
   tag: string | Component,
   components: UniSchemaComponentMap,
 ) {
@@ -482,7 +790,7 @@ function resolveSchemaComponent(
   return null
 }
 
-function createSchemaActionHandler(input: {
+export function createSchemaActionHandler(input: {
   actions?: UniRenderedSchemaNode['actions']
   node: UniRenderedSchemaNode
   app: UniAppContext
@@ -516,7 +824,7 @@ function createSchemaActionHandler(input: {
   }
 }
 
-function createSchemaModelHandler(input: {
+export function createSchemaModelHandler(input: {
   node: UniRenderedSchemaNode
   bindings: UniSchemaBindings
 }) {
@@ -644,7 +952,7 @@ function renderSchemaVNode(
   return h(resolvedTag, props, fallbackChildren)
 }
 
-function mergeSchemaComponents(
+export function mergeSchemaComponents(
   app: UniAppContext | undefined,
   components?: UniSchemaComponentInput,
 ) {
@@ -735,6 +1043,8 @@ export const UniSchemaRenderer = defineComponent({
   },
   setup(props) {
     const app = useUniApp()
+    const platform = resolveUniPlatformSync()
+    const useFragmentRoot = platform === 'h5' || platform === 'web'
 
     return () => {
       const components = mergeSchemaComponents(app, props.components)
@@ -746,11 +1056,17 @@ export const UniSchemaRenderer = defineComponent({
         allowedComponents,
       })
 
-      return h(Fragment, null, nodes.map(node => renderSchemaVNode(node, {
+      const children = nodes.map(node => renderSchemaVNode(node, {
         app,
         bindings: props.bindings || {},
         components,
-      })))
+      }))
+
+      if (useFragmentRoot) {
+        return h(Fragment, null, children)
+      }
+
+      return h('view', null, children)
     }
   },
 })

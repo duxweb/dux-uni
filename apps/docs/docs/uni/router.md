@@ -136,15 +136,25 @@ const guard = usePageGuard({
 
 ## 为什么统一用 `router.to()`
 
-因为不同页面底层跳转方式不一样。
+因为不同页面底层跳转方式不一样，而且现在 tabBar 已经拆成了“导航模式”和“渲染模式”两层。
 
 ```text
 普通页面     => navigateTo / redirectTo
-原生 tabBar  => switchTab
-自定义 tabBar=> reLaunch
+tabBarMode=native  => switchTab
+tabBarMode=custom  => reLaunch
 ```
 
-`useRouter().to()` 会按页面信息自动判断，业务层不用自己分支。
+`tabBarRenderer` 不决定跳转方式，它只决定界面上显示原生 tabbar 还是业务自定义 tabbar。
+
+也就是：
+
+```text
+native + native  => 原生 tab 页 + 原生 tabbar
+native + custom  => 原生 tab 页 + 自定义 tabbar
+custom + custom  => 普通页面跳转 + 自定义 tabbar
+```
+
+`useRouter().to()` 会按页面信息和 tabBar 配置自动判断，业务层不用自己分支。
 
 ## 继续阅读
 

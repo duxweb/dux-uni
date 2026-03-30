@@ -141,11 +141,14 @@ ui: {
 ```vue
 <script setup lang="ts">
 import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
+import { useThemePreference } from '@duxweb/uni'
+
+const { currentTheme } = useThemePreference()
 </script>
 
 <template>
   <DuxRoot
-    theme="light"
+    :theme="currentTheme"
     :tokens="{
       primary: '#059669',
       chrome: '#ffffff',
@@ -224,6 +227,12 @@ const {
 
 - 这个 composable 不返回业务文案
 - 类似“跟随系统（深色）”这种 label，建议由页面自己计算
+- 当前平台能力分两类：
+  - `manual`
+    允许手动切换 `system / light / dark`
+  - `system-only`
+    只允许跟随系统，调用 `setThemePreference()` 时也会被规范回 `system`
+- 当前实现里，`h5 / app` 属于 `manual`，小程序侧默认属于 `system-only`
 
 页面里最常见的接法：
 

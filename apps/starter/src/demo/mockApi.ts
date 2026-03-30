@@ -191,24 +191,38 @@ const schema: UniSchemaNode[] = [
     },
     children: [
       {
-        tag: 'text',
-        text: '服务端驱动的 Schema 渲染',
+        tag: 'view',
         style: {
-          display: 'block',
-          fontSize: '36rpx',
-          fontWeight: '700',
-          color: 'var(--dux-color-primary-stronger)',
+          alignSelf: 'stretch',
         },
+        children: [
+          {
+            tag: 'text',
+            text: '服务端驱动的 Schema 渲染',
+            style: {
+              fontSize: '36rpx',
+              fontWeight: '700',
+              color: 'var(--dux-color-primary-stronger)',
+            },
+          },
+        ],
       },
       {
-        tag: 'text',
-        bind: 'request.subtitle',
+        tag: 'view',
         style: {
-          display: 'block',
-          fontSize: '24rpx',
-          color: 'var(--dux-color-primary-strong)',
-          lineHeight: '1.7',
+          alignSelf: 'stretch',
         },
+        children: [
+          {
+            tag: 'text',
+            bind: 'request.subtitle',
+            style: {
+              fontSize: '24rpx',
+              color: 'var(--dux-color-primary-strong)',
+              lineHeight: '1.7',
+            },
+          },
+        ],
       },
       {
         tag: 'view',
@@ -225,37 +239,58 @@ const schema: UniSchemaNode[] = [
         },
         children: [
           {
-            tag: 'text',
-            bind: 'item.title',
+            tag: 'view',
             style: {
-              display: 'block',
-              fontSize: '30rpx',
-              fontWeight: '700',
-              color: 'var(--dux-color-neutral-stronger)',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                bind: 'item.title',
+                style: {
+                  fontSize: '30rpx',
+                  fontWeight: '700',
+                  color: 'var(--dux-color-neutral-stronger)',
+                },
+              },
+            ],
           },
           {
-            tag: 'text',
-            bind: 'item.summary',
+            tag: 'view',
             style: {
-              display: 'block',
-              fontSize: '24rpx',
-              color: 'var(--dux-color-neutral-muted)',
-              lineHeight: '1.7',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                bind: 'item.summary',
+                style: {
+                  fontSize: '24rpx',
+                  color: 'var(--dux-color-neutral-muted)',
+                  lineHeight: '1.7',
+                },
+              },
+            ],
           },
           {
-            tag: 'text',
-            bind: 'item.tag',
+            tag: 'view',
             style: {
               alignSelf: 'flex-start',
-              fontSize: '20rpx',
-              fontWeight: '700',
-              color: 'var(--dux-color-primary-strong)',
               backgroundColor: 'var(--dux-color-primary-soft)',
               borderRadius: '9999rpx',
               padding: '8rpx 18rpx',
             },
+            children: [
+              {
+                tag: 'text',
+                bind: 'item.tag',
+                style: {
+                  fontSize: '20rpx',
+                  fontWeight: '700',
+                  color: 'var(--dux-color-primary-strong)',
+                },
+              },
+            ],
           },
         ],
       },
@@ -272,39 +307,59 @@ const schema: UniSchemaNode[] = [
         },
         children: [
           {
-            tag: 'text',
-            text: 'bindings 双向写回',
+            tag: 'view',
             style: {
-              display: 'block',
-              fontSize: '28rpx',
-              fontWeight: '700',
-              color: 'var(--dux-color-neutral-stronger)',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                text: 'bindings 双向写回',
+                style: {
+                  fontSize: '28rpx',
+                  fontWeight: '700',
+                  color: 'var(--dux-color-neutral-stronger)',
+                },
+              },
+            ],
           },
           {
-            tag: 'input',
-            model: 'state.message',
-            props: {
-              placeholder: '请输入一段 Schema 文本',
-            },
+            tag: 'view',
             style: {
+              alignSelf: 'stretch',
               borderRadius: '18rpx',
               border: '1px solid var(--dux-color-neutral-subtle)',
               backgroundColor: 'var(--dux-color-background)',
-              padding: '18rpx 20rpx',
-              fontSize: '24rpx',
-              color: 'var(--dux-color-neutral-stronger)',
+              padding: '6rpx 18rpx 4rpx',
             },
+            children: [
+              {
+                tag: 'wd-input',
+                model: 'state.message',
+                props: {
+                  placeholder: '请输入一段 Schema 文本',
+                  clearable: true,
+                  noBorder: true,
+                },
+              },
+            ],
           },
           {
-            tag: 'text',
-            bind: 'state.message',
+            tag: 'view',
             style: {
-              display: 'block',
-              fontSize: '24rpx',
-              color: 'var(--dux-color-neutral-strong)',
-              lineHeight: '1.7',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                bind: 'state.message',
+                style: {
+                  fontSize: '24rpx',
+                  color: 'var(--dux-color-neutral-strong)',
+                  lineHeight: '1.7',
+                },
+              },
+            ],
           },
         ],
       },
@@ -321,84 +376,116 @@ const schema: UniSchemaNode[] = [
         },
         children: [
           {
-            tag: 'text',
-            text: 'switch / case 条件分支',
+            tag: 'view',
             style: {
-              display: 'block',
-              fontSize: '28rpx',
-              fontWeight: '700',
-              color: 'var(--dux-color-neutral-stronger)',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                text: 'switch / case 条件分支',
+                style: {
+                  fontSize: '28rpx',
+                  fontWeight: '700',
+                  color: 'var(--dux-color-neutral-stronger)',
+                },
+              },
+            ],
           },
           {
-            tag: 'text',
+            tag: 'view',
             switch: 'state.status',
             case: 'active',
-            text: '当前状态：active，适合展示进行中的交互。',
             style: {
-              display: 'block',
-              fontSize: '24rpx',
-              color: 'var(--dux-color-success-strong)',
-              lineHeight: '1.7',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                text: '当前状态：active，适合展示进行中的交互。',
+                style: {
+                  fontSize: '24rpx',
+                  color: 'var(--dux-color-success-strong)',
+                  lineHeight: '1.7',
+                },
+              },
+            ],
           },
           {
-            tag: 'text',
+            tag: 'view',
             case: 'draft',
-            text: '当前状态：draft，适合展示草稿或待完善内容。',
             style: {
-              display: 'block',
-              fontSize: '24rpx',
-              color: 'var(--dux-color-warning-strong)',
-              lineHeight: '1.7',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                text: '当前状态：draft，适合展示草稿或待完善内容。',
+                style: {
+                  fontSize: '24rpx',
+                  color: 'var(--dux-color-warning-strong)',
+                  lineHeight: '1.7',
+                },
+              },
+            ],
           },
           {
-            tag: 'text',
+            tag: 'view',
             defaultCase: true,
-            text: '当前状态：其他，走默认分支。',
             style: {
-              display: 'block',
-              fontSize: '24rpx',
-              color: 'var(--dux-color-neutral-muted)',
-              lineHeight: '1.7',
+              alignSelf: 'stretch',
             },
+            children: [
+              {
+                tag: 'text',
+                text: '当前状态：其他，走默认分支。',
+                style: {
+                  fontSize: '24rpx',
+                  color: 'var(--dux-color-neutral-muted)',
+                  lineHeight: '1.7',
+                },
+              },
+            ],
           },
         ],
       },
       {
-        tag: 'wd-button',
-        props: {
-          type: 'primary',
-          block: true,
-        },
-        text: '查看表单页',
+        tag: 'view',
         style: {
-          marginTop: '12rpx',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12rpx',
         },
-        actions: {
-          tap: {
-            name: 'navigate',
-            payload: '/pages/form/index',
+        children: [
+          {
+            tag: 'wd-button',
+            props: {
+              type: 'primary',
+              block: true,
+            },
+            text: '查看表单页',
+            actions: {
+              tap: {
+                name: 'navigate',
+                payload: '/pages/form/index',
+              },
+            },
           },
-        },
-      },
-      {
-        tag: 'wd-button',
-        props: {
-          plain: true,
-          block: true,
-        },
-        text: '触发提示',
-        style: {
-          marginTop: '12rpx',
-        },
-        actions: {
-          tap: {
-            name: 'toast',
-            payload: 'Schema 动作执行成功',
+          {
+            tag: 'wd-button',
+            props: {
+              plain: true,
+              block: true,
+            },
+            text: '触发提示',
+            actions: {
+              tap: {
+                name: 'toast',
+                payload: 'Schema 动作执行成功',
+              },
+            },
           },
-        },
+        ],
       },
     ],
   },

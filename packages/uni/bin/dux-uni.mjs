@@ -225,18 +225,41 @@ function resolveSchemaComponentEntries(config) {
 function renderSchemaComponentProxy(input) {
   const { name, slots = [] } = input
   const componentName = createSchemaComponentImportName(name)
+  const supportsDefaultSlot = name === 'wd-button'
   const slotTemplates = slots.map(slot => `    <template #${slot}>
       <slot name="${slot}" />
     </template>`).join('\n')
+  const defaultSlot = supportsDefaultSlot ? '\n    <slot />' : ''
   const slotBlock = slotTemplates ? `\n${slotTemplates}` : ''
 
   return `<script setup lang="ts">
 import { computed, useAttrs } from 'vue'
 
+const emit = defineEmits(['click', 'change', 'input', 'submit', 'update:modelValue'])
 const attrs = useAttrs()
 const forwardedAttrs = computed(() => Object.fromEntries(
   Object.entries(attrs).filter(([key, value]) => value !== undefined && key !== 'virtualHostStyle' && key !== 'virtualHostClass'),
 ))
+
+function handleClick(event: any) {
+  emit('click', event)
+}
+
+function handleChange(event: any) {
+  emit('change', event)
+}
+
+function handleInput(event: any) {
+  emit('input', event)
+}
+
+function handleSubmit(event: any) {
+  emit('submit', event)
+}
+
+function handleUpdateModelValue(value: any) {
+  emit('update:modelValue', value)
+}
 </script>
 
 <script lang="ts">
@@ -247,8 +270,14 @@ export default {
 </script>
 
 <template>
-  <${name} v-bind="forwardedAttrs">
-    <slot />${slotBlock}
+  <${name}
+    v-bind="forwardedAttrs"
+    @click="handleClick"
+    @change="handleChange"
+    @input="handleInput"
+    @submit="handleSubmit"
+    @update:modelValue="handleUpdateModelValue"
+  >${defaultSlot}${slotBlock}
   </${name}>
 </template>
 `
@@ -280,6 +309,575 @@ ${imports}
 export const generatedSchemaComponents = defineSchemaComponents([
 ${registrations}
 ])
+`
+}
+
+function createUniSchemaRendererBridgeModule() {
+  return `<script setup lang="ts">
+// @ts-nocheck
+import { computed, provide, reactive, watch } from 'vue'
+import { UniSchemaRenderer as RuntimeUniSchemaRenderer, resolveSchemaTemplateEntries, resolveUniPlatformSync } from '@duxweb/uni'
+import UniSchemaNodeChildren from '@/runtime/generated/UniSchemaNodeChildren.vue'
+
+const props = defineProps({
+  schema: {
+    type: Array,
+    required: true,
+  },
+  bindings: {
+    type: Object,
+    default: () => ({}),
+  },
+  components: {
+    type: [Object, Array],
+    default: undefined,
+  },
+})
+
+const platform = resolveUniPlatformSync()
+const useTemplateRenderer = platform.startsWith('mp-')
+
+function replaceBindings(target, source) {
+  Object.keys(target).forEach((key) => {
+    delete target[key]
+  })
+
+  Object.assign(target, source || {})
+}
+
+const localBindings = reactive({})
+
+watch(() => props.bindings, (value) => {
+  if (!useTemplateRenderer) {
+    return
+  }
+
+  replaceBindings(localBindings, value)
+}, {
+  immediate: true,
+})
+
+const rendererBindings = computed(() => useTemplateRenderer ? localBindings : (props.bindings || {}))
+const nodes = computed(() => resolveSchemaTemplateEntries(props.schema || [], rendererBindings.value))
+
+provide('dux-uni-schema-bindings', rendererBindings)
+</script>
+
+<template>
+  <RuntimeUniSchemaRenderer
+    v-if="!useTemplateRenderer"
+    :schema="schema"
+    :bindings="bindings || {}"
+    :components="components"
+  />
+  <view v-else>
+    <UniSchemaNodeChildren
+      :entries="nodes"
+      prefix="root"
+    />
+  </view>
+</template>
+`
+}
+
+function renderSchemaNodeChildrenUsage(source, keyPrefix, indent = '    ') {
+  return `${indent}<UniSchemaNodeChildren
+${indent}  :entries="${source}"
+${indent}  prefix="${keyPrefix}"
+${indent}/>`
+}
+
+function toSchemaPropKey(name) {
+  return name.replace(/-([a-z0-9])/g, (_, item) => item.toUpperCase())
+}
+
+function renderSchemaPropBinding(name, indent = '    ') {
+  const camelName = toSchemaPropKey(name)
+  const keys = camelName === name
+    ? `'${name}'`
+    : `'${name}', '${camelName}'`
+
+  return `${indent}:${name}="readProp(${keys})"`
+}
+
+function renderSchemaPropBindings(names, indent = '    ') {
+  return names.map(name => renderSchemaPropBinding(name, indent)).join('\n')
+}
+
+function renderSchemaComponentSlotTemplates(slots) {
+  return slots.map(slot => `    <template v-if="hasSlotEntries('${slot}')" #${slot}>
+${renderSchemaNodeChildrenUsage(`getSlotEntries('${slot}')`, `${slot}-slot`, '      ')}
+    </template>`).join('\n')
+}
+
+function createUniSchemaNodeChildrenBridgeModule() {
+  return `<script setup lang="ts">
+// @ts-nocheck
+import UniSchemaNodeRenderer from '@/runtime/generated/UniSchemaNodeRenderer.vue'
+
+const props = defineProps({
+  entries: {
+    type: Array,
+    default: () => [],
+  },
+  prefix: {
+    type: String,
+    default: 'entry',
+  },
+})
+
+function isTextEntry(entry) {
+  return typeof entry === 'string'
+}
+
+function entryKey(entry, index) {
+  if (typeof entry === 'string') {
+    return \`\${props.prefix}-text-\${index}\`
+  }
+
+  return entry?.key || \`\${props.prefix}-node-\${index}\`
+}
+</script>
+
+<template>
+  <block
+    v-for="(entry, entryIndex) in entries"
+    :key="entryKey(entry, entryIndex)"
+  >
+    <text v-if="isTextEntry(entry)">
+      {{ entry }}
+    </text>
+    <UniSchemaNodeRenderer
+      v-else
+      :node="entry"
+    />
+  </block>
+</template>
+`
+}
+
+function createUniSchemaNodeRendererBridgeModule(config) {
+  const components = resolveSchemaComponentEntries(config)
+  const supportsDefaultSlot = name => name === 'wd-button'
+  const imports = components.map(({ name }) => {
+    const importName = createSchemaComponentImportName(name)
+    return `import ${importName} from '@/runtime/generated/schema-components/${name}.vue'`
+  }).join('\n')
+
+  const customBranches = components.map(({ name, slots = [] }) => {
+    const importName = createSchemaComponentImportName(name)
+    const slotTemplates = renderSchemaComponentSlotTemplates(slots)
+    const contentBlock = supportsDefaultSlot(name)
+      ? `${slotTemplates ? `${slotTemplates}\n` : ''}    <block v-if="hasDefaultChildren">
+${renderSchemaNodeChildrenUsage('defaultChildren', `${name}-child`)}
+    </block>
+    <block v-else-if="hasText">
+      {{ textContent }}
+    </block>`
+      : `${slotTemplates ? `${slotTemplates}\n` : ''}`
+
+    return `  <${importName}
+    v-else-if="tag === '${name}'"
+    v-bind="customComponentAttrs"
+    :class="nodeClass"
+    :style="nodeStyle"
+    @click="handleClick"
+    @change="handleChange"
+    @input="handleInput"
+    @submit="handleSubmit"
+    @update:modelValue="handleUpdateModelValue"
+  >
+${contentBlock}
+  </${importName}>`
+  }).join('\n')
+
+  return `<script setup lang="ts">
+// @ts-nocheck
+import { computed, inject, ref, watch } from 'vue'
+import {
+  createSchemaActionHandler,
+  createSchemaModelHandler,
+  resolveSchemaTemplateEntries,
+  resolveSchemaTemplateNode,
+  useUniApp,
+} from '@duxweb/uni'
+import UniSchemaNodeChildren from '@/runtime/generated/UniSchemaNodeChildren.vue'
+${imports}
+
+defineOptions({
+  name: 'UniSchemaNodeRenderer',
+})
+
+const props = defineProps({
+  node: {
+    type: Object,
+    required: true,
+  },
+})
+
+const injectedBindings = inject('dux-uni-schema-bindings', undefined)
+const inheritedBindings = computed(() => injectedBindings?.value || injectedBindings || {})
+const localBindings = computed(() => {
+  const snapshot = props.node?.__bindings
+  const inherited = inheritedBindings.value || {}
+
+  if (!snapshot || typeof snapshot !== 'object') {
+    return {}
+  }
+
+  return Object.entries(snapshot).reduce((output, [key, value]) => {
+    if (!(key in inherited)) {
+      output[key] = value
+    }
+    return output
+  }, {})
+})
+
+function composeHandler(primary, secondary) {
+  if (primary && secondary) {
+    return (payload) => {
+      primary(payload)
+      secondary(payload)
+    }
+  }
+
+  return primary || secondary
+}
+
+function normalizeEntries(entries) {
+  if (Array.isArray(entries)) {
+    return entries
+  }
+
+  if (typeof entries === 'undefined' || entries === null) {
+    return []
+  }
+
+  return [entries]
+}
+
+function extractEventValue(payload) {
+  if (payload && typeof payload === 'object') {
+    if (payload.detail && typeof payload.detail === 'object') {
+      if ('value' in payload.detail) {
+        return payload.detail.value
+      }
+      if ('checked' in payload.detail) {
+        return payload.detail.checked
+      }
+    }
+
+    if (payload.target && typeof payload.target === 'object') {
+      if ('value' in payload.target) {
+        return payload.target.value
+      }
+      if ('checked' in payload.target) {
+        return payload.target.checked
+      }
+    }
+
+    if ('value' in payload) {
+      return payload.value
+    }
+    if ('checked' in payload) {
+      return payload.checked
+    }
+  }
+
+  return payload
+}
+
+const app = useUniApp()
+const nodeBindings = computed(() => Object.assign(
+  Object.create(inheritedBindings.value || null),
+  localBindings.value,
+))
+const resolvedNode = computed(() => resolveSchemaTemplateNode(props.node, nodeBindings.value))
+const tag = computed(() => String(resolvedNode.value?.tag || props.node?.tag || ''))
+const actionHandlers = computed(() => createSchemaActionHandler({
+  actions: resolvedNode.value?.actions,
+  node: resolvedNode.value || props.node,
+  app,
+  bindings: nodeBindings.value,
+}))
+const model = computed(() => createSchemaModelHandler({
+  node: resolvedNode.value || props.node,
+  bindings: nodeBindings.value,
+}))
+const defaultChildren = computed(() => normalizeEntries(resolvedNode.value?.children))
+const hasDefaultChildren = computed(() => defaultChildren.value.length > 0)
+const hasText = computed(() => resolvedNode.value?.text != null && !hasDefaultChildren.value)
+const textContent = computed(() => resolvedNode.value?.text == null ? '' : String(resolvedNode.value.text))
+const nodeClass = computed(() => resolvedNode.value?.class)
+const nodeStyle = computed(() => resolvedNode.value?.style)
+const nodeProps = computed(() => resolvedNode.value?.props || {})
+const modelValue = computed(() => model.value.value)
+const inputValue = ref('')
+const resolvedDisabled = computed(() => {
+  if (typeof resolvedNode.value?.disabled !== 'undefined') {
+    return resolvedNode.value.disabled
+  }
+
+  return readProp('disabled')
+})
+const switchChecked = computed(() => Boolean(model.value.value))
+const customComponentAttrs = computed(() => {
+  const attrs = {
+    ...(nodeProps.value || {}),
+  }
+
+  if (typeof resolvedDisabled.value !== 'undefined' && typeof attrs.disabled === 'undefined') {
+    attrs.disabled = resolvedDisabled.value
+  }
+
+  if (resolvedNode.value?.model) {
+    attrs[resolvedNode.value.modelProp || 'modelValue'] = modelValue.value
+  }
+
+  return attrs
+})
+
+watch(modelValue, (value) => {
+  const nextValue = value == null ? '' : String(value)
+
+  if (nextValue !== inputValue.value) {
+    inputValue.value = nextValue
+  }
+}, {
+  immediate: true,
+})
+
+function getSlotEntries(name) {
+  return normalizeEntries(resolvedNode.value?.slots?.[name] || resolveSchemaTemplateEntries(props.node?.slots?.[name], nodeBindings.value))
+}
+
+function readProp(...names) {
+  const source = nodeProps.value || {}
+
+  for (const name of names) {
+    if (typeof source[name] !== 'undefined') {
+      return source[name]
+    }
+  }
+
+  return undefined
+}
+
+function hasSlotEntries(name) {
+  return getSlotEntries(name).length > 0
+}
+
+function handleClick(payload) {
+  actionHandlers.value.onClick?.(payload)
+}
+
+function handleSubmit(payload) {
+  actionHandlers.value.onSubmit?.(payload)
+}
+
+function handleInput(payload) {
+  const nextValue = extractEventValue(payload)
+
+  if (tag.value === 'input' || tag.value === 'textarea') {
+    inputValue.value = nextValue == null ? '' : String(nextValue)
+    model.value.handlers?.onInput?.(nextValue)
+    actionHandlers.value.onInput?.(payload)
+    return inputValue.value
+  }
+
+  return composeHandler(model.value.handlers?.onInput, actionHandlers.value.onInput)?.(payload)
+}
+
+function handleChange(payload) {
+  const nextValue = extractEventValue(payload)
+
+  if (tag.value === 'input' || tag.value === 'textarea') {
+    model.value.handlers?.onChange?.(nextValue)
+    actionHandlers.value.onChange?.(payload)
+    return
+  }
+
+  composeHandler(model.value.handlers?.onChange, actionHandlers.value.onChange)?.(payload)
+}
+
+function handleUpdateModelValue(payload) {
+  composeHandler(model.value.handlers?.['onUpdate:modelValue'], actionHandlers.value['onUpdate:modelValue'])?.(payload)
+}
+</script>
+
+<template>
+  <view
+    v-if="tag === 'view'"
+    :class="nodeClass"
+    :style="nodeStyle"
+    @click="handleClick"
+  >
+    <block v-if="hasDefaultChildren">
+${renderSchemaNodeChildrenUsage('defaultChildren', 'view-child')}
+    </block>
+    <text v-else-if="hasText">
+      {{ textContent }}
+    </text>
+  </view>
+
+  <text
+    v-else-if="tag === 'text'"
+    :class="nodeClass"
+    :style="nodeStyle"
+    :selectable="readProp('selectable')"
+    :space="readProp('space')"
+    :decode="readProp('decode')"
+    :user-select="readProp('user-select', 'userSelect')"
+    @click="handleClick"
+  >
+    <block v-if="hasDefaultChildren">
+${renderSchemaNodeChildrenUsage('defaultChildren', 'text-child')}
+    </block>
+    <block v-else-if="hasText">
+      {{ textContent }}
+    </block>
+  </text>
+
+  <image
+    v-else-if="tag === 'image'"
+    :class="nodeClass"
+    :style="nodeStyle"
+    :src="readProp('src')"
+    :mode="readProp('mode')"
+    :lazy-load="readProp('lazy-load', 'lazyLoad')"
+    :show-menu-by-longpress="readProp('show-menu-by-longpress', 'showMenuByLongpress')"
+    @click="handleClick"
+  />
+
+  <scroll-view
+    v-else-if="tag === 'scroll-view'"
+    :class="nodeClass"
+    :style="nodeStyle"
+${renderSchemaPropBindings([
+  'scroll-x',
+  'scroll-y',
+  'upper-threshold',
+  'lower-threshold',
+  'scroll-top',
+  'scroll-left',
+  'scroll-into-view',
+  'scroll-with-animation',
+  'enable-back-to-top',
+  'show-scrollbar',
+  'enhanced',
+  'paging-enabled',
+  'refresher-enabled',
+  'refresher-threshold',
+  'refresher-default-style',
+  'refresher-background',
+])}
+    @click="handleClick"
+  >
+    <block v-if="hasDefaultChildren">
+${renderSchemaNodeChildrenUsage('defaultChildren', 'scroll-child')}
+    </block>
+    <text v-else-if="hasText">
+      {{ textContent }}
+    </text>
+  </scroll-view>
+
+  <input
+    v-else-if="tag === 'input'"
+    :class="nodeClass"
+    :style="nodeStyle"
+    :value="inputValue"
+    :type="readProp('type')"
+    :password="readProp('password')"
+    :placeholder="readProp('placeholder')"
+    :placeholder-style="readProp('placeholder-style', 'placeholderStyle')"
+    :placeholder-class="readProp('placeholder-class', 'placeholderClass')"
+    :maxlength="readProp('maxlength')"
+    :cursor-spacing="readProp('cursor-spacing', 'cursorSpacing')"
+    :focus="readProp('focus')"
+    :confirm-type="readProp('confirm-type', 'confirmType')"
+    :confirm-hold="readProp('confirm-hold', 'confirmHold')"
+    :cursor="readProp('cursor')"
+    :selection-start="readProp('selection-start', 'selectionStart')"
+    :selection-end="readProp('selection-end', 'selectionEnd')"
+    :adjust-position="readProp('adjust-position', 'adjustPosition')"
+    :hold-keyboard="readProp('hold-keyboard', 'holdKeyboard')"
+    :always-embed="readProp('always-embed', 'alwaysEmbed')"
+    :disabled="resolvedDisabled"
+    @input="handleInput"
+    @change="handleChange"
+  />
+
+  <textarea
+    v-else-if="tag === 'textarea'"
+    :class="nodeClass"
+    :style="nodeStyle"
+    :value="inputValue"
+    :placeholder="readProp('placeholder')"
+    :placeholder-style="readProp('placeholder-style', 'placeholderStyle')"
+    :placeholder-class="readProp('placeholder-class', 'placeholderClass')"
+    :maxlength="readProp('maxlength')"
+    :auto-height="readProp('auto-height', 'autoHeight')"
+    :fixed="readProp('fixed')"
+    :cursor-spacing="readProp('cursor-spacing', 'cursorSpacing')"
+    :cursor="readProp('cursor')"
+    :show-confirm-bar="readProp('show-confirm-bar', 'showConfirmBar')"
+    :selection-start="readProp('selection-start', 'selectionStart')"
+    :selection-end="readProp('selection-end', 'selectionEnd')"
+    :adjust-position="readProp('adjust-position', 'adjustPosition')"
+    :hold-keyboard="readProp('hold-keyboard', 'holdKeyboard')"
+    :disable-default-padding="readProp('disable-default-padding', 'disableDefaultPadding')"
+    :confirm-type="readProp('confirm-type', 'confirmType')"
+    :confirm-hold="readProp('confirm-hold', 'confirmHold')"
+    :disabled="resolvedDisabled"
+    @input="handleInput"
+    @change="handleChange"
+  />
+
+  <switch
+    v-else-if="tag === 'switch'"
+    :class="nodeClass"
+    :style="nodeStyle"
+    :checked="switchChecked"
+    :type="readProp('type')"
+    :color="readProp('color')"
+    :disabled="resolvedDisabled"
+    @change="handleChange"
+  />
+
+  <button
+    v-else-if="tag === 'button'"
+    :class="nodeClass"
+    :style="nodeStyle"
+    :size="readProp('size')"
+    :type="readProp('type')"
+    :plain="readProp('plain')"
+    :loading="readProp('loading')"
+    :form-type="readProp('form-type', 'formType')"
+    :open-type="readProp('open-type', 'openType')"
+    :hover-class="readProp('hover-class', 'hoverClass')"
+    :hover-start-time="readProp('hover-start-time', 'hoverStartTime')"
+    :hover-stay-time="readProp('hover-stay-time', 'hoverStayTime')"
+    :lang="readProp('lang')"
+    :session-from="readProp('session-from', 'sessionFrom')"
+    :send-message-title="readProp('send-message-title', 'sendMessageTitle')"
+    :send-message-path="readProp('send-message-path', 'sendMessagePath')"
+    :send-message-img="readProp('send-message-img', 'sendMessageImg')"
+    :app-parameter="readProp('app-parameter', 'appParameter')"
+    :show-message-card="readProp('show-message-card', 'showMessageCard')"
+    :disabled="resolvedDisabled"
+    @click="handleClick"
+    @submit="handleSubmit"
+  >
+    <block v-if="hasDefaultChildren">
+${renderSchemaNodeChildrenUsage('defaultChildren', 'button-child')}
+    </block>
+    <block v-else-if="hasText">
+      {{ textContent }}
+    </block>
+  </button>
+${customBranches ? `\n${customBranches}\n` : ''}
+  <view v-else />
+</template>
 `
 }
 
@@ -626,6 +1224,24 @@ async function syncProject(rootDir) {
   )
 
   writeFileSync(
+    resolve(runtimeGeneratedDir, 'UniSchemaRenderer.vue'),
+    createUniSchemaRendererBridgeModule(),
+    'utf8',
+  )
+
+  writeFileSync(
+    resolve(runtimeGeneratedDir, 'UniSchemaNodeChildren.vue'),
+    createUniSchemaNodeChildrenBridgeModule(),
+    'utf8',
+  )
+
+  writeFileSync(
+    resolve(runtimeGeneratedDir, 'UniSchemaNodeRenderer.vue'),
+    createUniSchemaNodeRendererBridgeModule(duxConfig),
+    'utf8',
+  )
+
+  writeFileSync(
     resolve(runtimeGeneratedDir, 'overlay-registry.vue'),
     createOverlayRegistryModule(overlayComponents),
     'utf8',
@@ -832,6 +1448,119 @@ function createMiniProgramProjectConfigSync(rootDir, command, rawArgs) {
   }
 }
 
+function resolveMiniProgramOutputDir(rootDir, command, rawArgs) {
+  const [platform] = rawArgs
+  const resolvedPlatform = platform && !platform.startsWith('-') ? platform : 'mp-weixin'
+
+  if (resolvedPlatform !== 'mp-weixin') {
+    return undefined
+  }
+
+  return resolve(rootDir, 'dist', command === 'build' ? 'build' : 'dev', 'mp-weixin')
+}
+
+function normalizeMiniProgramVirtualHostContent(content) {
+  return content.replaceAll(
+    'virtualHostStyle="{{virtualHostStyle}}"',
+    "virtualHostStyle=\"{{virtualHostStyle || ''}}\"",
+  )
+}
+
+function createMiniProgramVirtualHostSync(rootDir, command, rawArgs) {
+  const outputDir = resolveMiniProgramOutputDir(rootDir, command, rawArgs)
+
+  if (!outputDir) {
+    return undefined
+  }
+
+  const visited = new Map()
+
+  function walk(dir, files) {
+    if (!existsSync(dir)) {
+      return
+    }
+
+    let entries = []
+
+    try {
+      entries = readdirSync(dir, { withFileTypes: true })
+    }
+    catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+        return
+      }
+      throw error
+    }
+
+    entries.forEach((entry) => {
+      const file = resolve(dir, entry.name)
+
+      if (entry.isDirectory()) {
+        walk(file, files)
+        return
+      }
+
+      if (entry.isFile() && file.endsWith('.wxml')) {
+        files.push(file)
+      }
+    })
+  }
+
+  function sync() {
+    if (!existsSync(outputDir)) {
+      return
+    }
+
+    const files = []
+    walk(outputDir, files)
+
+    files.forEach((file) => {
+      if (!existsSync(file)) {
+        visited.delete(file)
+        return
+      }
+
+      const stats = statSync(file)
+      const fingerprint = `${stats.size}:${stats.mtimeMs}`
+
+      if (visited.get(file) === fingerprint) {
+        return
+      }
+
+      const source = readFileSync(file, 'utf8')
+      const normalized = normalizeMiniProgramVirtualHostContent(source)
+
+      if (normalized !== source) {
+        writeFileSync(file, normalized, 'utf8')
+        if (existsSync(file)) {
+          const nextStats = statSync(file)
+          visited.set(file, `${nextStats.size}:${nextStats.mtimeMs}`)
+        }
+        return
+      }
+
+      visited.set(file, fingerprint)
+    })
+  }
+
+  sync()
+
+  const timer = setInterval(sync, 500)
+
+  const close = () => {
+    clearInterval(timer)
+    sync()
+  }
+
+  process.once('exit', close)
+  process.once('SIGINT', close)
+  process.once('SIGTERM', close)
+
+  return {
+    close,
+  }
+}
+
 function createModuleExportName(name) {
   const camelName = name
     .replace(/(^\w)|[-_/](\w)/g, (_, first, nested) => (first || nested).toUpperCase())
@@ -937,6 +1666,7 @@ async function runUni(rootDir, command, rawArgs) {
     ? createDevSyncWatcher(rootDir)
     : undefined
   const mpProjectConfigSync = createMiniProgramProjectConfigSync(rootDir, command, rawArgs)
+  const mpVirtualHostSync = createMiniProgramVirtualHostSync(rootDir, command, rawArgs)
   const uniBin = resolve(rootDir, 'node_modules/@dcloudio/vite-plugin-uni/bin/uni.js')
 
   const child = spawn(process.execPath, [uniBin, ...resolveUniArgs(command, rawArgs)], {
@@ -948,6 +1678,7 @@ async function runUni(rootDir, command, rawArgs) {
   child.on('exit', (code) => {
     watcher?.close()
     mpProjectConfigSync?.close()
+    mpVirtualHostSync?.close()
     process.exit(code ?? 0)
   })
 }

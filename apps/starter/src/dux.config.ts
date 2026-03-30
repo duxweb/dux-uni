@@ -17,7 +17,7 @@ export default defineDuxConfig({
   ui: {
     theme: 'auto',
     navigationStyle: 'custom',
-    schemaComponents: ['wd-button'],
+    schemaComponents: ['wd-button', 'wd-input'],
     tokens: {
       primary: '#059669',
       info: '#0ea5e9',

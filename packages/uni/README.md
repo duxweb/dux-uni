@@ -95,10 +95,25 @@ route.tabBar
 
 ### Custom TabBar Loading
 
-自定义 tabBar 和原生 tabBar 的运行行为并不一样。
+现在要区分“底层导航模式”和“界面渲染模式”。
 
-- native tabBar is the recommended choice for App and mini-program first-level navigation when you care about switching performance
-- custom tabBar gives you full UI control, but first switch may still show loading because it is regular page navigation instead of platform-level tab retention
+- `tabBarMode: 'native'`
+  - tab 页走 `switchTab`
+  - 页面缓存和一级切换性能由平台原生 tab 页承接
+- `tabBarRenderer: 'custom'`
+  - 只影响界面外观
+  - 不会强制把 tab 页退回普通页面跳转
+
+推荐组合：
+
+- `native + native`
+  - 原生 tab 页 + 原生 tabbar
+- `native + custom`
+  - 原生 tab 页 + 自定义 tabbar
+- `custom + custom`
+  - 普通页面跳转 + 自定义 tabbar
+
+如果你关心小程序 / App 的一级导航切换性能，优先使用 `tabBarMode: 'native'`。
 
 `uni.preloadPage()` is not a universal solution here:
 
