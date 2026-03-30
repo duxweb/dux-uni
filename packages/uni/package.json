@@ -1,6 +1,6 @@
 {
   "name": "@duxweb/uni",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Headless application framework for uni-app projects.",
   "license": "MIT",
   "type": "module",

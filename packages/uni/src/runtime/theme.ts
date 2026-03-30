@@ -8,6 +8,20 @@ export type UniThemePreferenceCapability = 'manual' | 'system-only'
 
 let cachedPlatform = ''
 
+type UniRuntimeLike = {
+  getAppBaseInfo?: () => { hostName?: string, uniPlatform?: string, theme?: string }
+  getSystemInfoSync?: () => { theme?: string }
+  setNavigationBarColor?: (options: Record<string, unknown>) => unknown
+  setBackgroundColor?: (options: Record<string, unknown>) => unknown
+  onThemeChange?: (callback: (payload: { theme?: string }) => void) => void
+}
+
+function getUniRuntime(): UniRuntimeLike | undefined {
+  return (globalThis as typeof globalThis & {
+    uni?: UniRuntimeLike
+  }).uni
+}
+
 export function resolveUniPlatformSync() {
   if (cachedPlatform) {
     return cachedPlatform
@@ -37,9 +51,7 @@ export function resolveUniPlatformSync() {
     return cachedPlatform
   }
 
-  const appBase = (uni as typeof uni & {
-    getAppBaseInfo?: () => { hostName?: string, uniPlatform?: string }
-  }).getAppBaseInfo
+  const appBase = getUniRuntime()?.getAppBaseInfo
 
   if (typeof appBase === 'function') {
     const info = appBase() as { hostName?: string, uniPlatform?: string }
@@ -108,17 +120,14 @@ export function resolveThemePreferenceCapabilitySync(): UniThemePreferenceCapabi
 }
 
 export function resolveSystemThemeSync(): UniResolvedTheme {
-  const appBase = (uni as typeof uni & {
-    getAppBaseInfo?: () => { theme?: string }
-  }).getAppBaseInfo
+  const uniRuntime = getUniRuntime()
+  const appBase = uniRuntime?.getAppBaseInfo
 
   if (typeof appBase === 'function') {
     return appBase().theme === 'dark' ? 'dark' : 'light'
   }
 
-  const getSystemInfoSync = (uni as typeof uni & {
-    getSystemInfoSync?: () => { theme?: string }
-  }).getSystemInfoSync
+  const getSystemInfoSync = uniRuntime?.getSystemInfoSync
 
   if (typeof getSystemInfoSync === 'function') {
     return getSystemInfoSync().theme === 'dark' ? 'dark' : 'light'
@@ -188,7 +197,7 @@ function applyNavigationBarTheme(
     return false
   }
 
-  const apply = uni.setNavigationBarColor
+  const apply = getUniRuntime()?.setNavigationBarColor
 
   if (typeof apply !== 'function') {
     return true
@@ -239,8 +248,9 @@ function applyNativeTheme(context: UniAppContext, theme: UniResolvedTheme, onRet
   }
 
   const palette = createUniTheme(tokens)[theme]
+  const uniRuntime = getUniRuntime()
 
-  uni.setBackgroundColor?.({
+  uniRuntime?.setBackgroundColor?.({
     backgroundColor: palette.bgColor,
     backgroundColorTop: palette.bgColorTop,
     backgroundColorBottom: palette.bgColorBottom,
@@ -334,7 +344,7 @@ export function installNativeThemeRuntime(context: UniAppContext) {
     requestThemeApply(resolveSystemThemeSync())
   }
 
-  uni.onThemeChange?.(({ theme }) => {
+  getUniRuntime()?.onThemeChange?.(({ theme }) => {
     const resolvedTheme = theme === 'dark' ? 'dark' : 'light'
     options.onSystemThemeChange?.(resolvedTheme, context)
 

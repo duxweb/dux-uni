@@ -1,6 +1,6 @@
 {
   "name": "@duxweb/uni-pro",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Wot UI adaptation layer for Dux Uni.",
   "license": "MIT",
   "type": "module",
