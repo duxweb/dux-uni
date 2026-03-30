@@ -5,6 +5,7 @@ import type { DuxThemeTokens } from './dux/types'
 
 export type Dict<T = unknown> = Record<string, T>
 export type UniTabBarMode = 'auto' | 'custom' | 'native'
+export type UniTabBarRenderer = 'auto' | 'custom' | 'native'
 
 export interface UniPageMeta {
   name: string
@@ -622,6 +623,7 @@ export interface UniAppConfig {
   apiBasePath?: string
   overlayRegistry?: Component | string
   tabBarMode?: UniTabBarMode
+  tabBarRenderer?: UniTabBarRenderer
   pages?: UniPageMeta[]
   layouts?: Record<string, string>
   modules?: UniModuleManifest[]

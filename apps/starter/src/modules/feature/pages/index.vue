@@ -1,10 +1,6 @@
 <route lang="json">
 {
-  "title": "功能",
-  "tabBarIcon": {
-    "iconPath": "static/tabbar/feature.svg",
-    "selectedIconPath": "static/tabbar/feature-active.svg"
-  }
+  "title": "功能"
 }
 </route>
 

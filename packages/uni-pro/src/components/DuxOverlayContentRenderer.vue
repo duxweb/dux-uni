@@ -4,6 +4,7 @@
 
 <script lang="ts">
 import { defineComponent, h, ref, resolveComponent } from 'vue'
+import { sanitizeAttrs } from '../attrs'
 
 export default defineComponent({
   name: 'DuxOverlayContentRenderer',
@@ -33,9 +34,10 @@ export default defineComponent({
       const target = typeof props.content === 'string'
         ? resolveComponent(props.content)
         : props.content
+      const forwardedAttrs = sanitizeAttrs(attrs as Record<string, unknown>)
 
       return h(target as any, {
-        ...attrs,
+        ...forwardedAttrs,
         ref: (value: unknown) => {
           innerRef.value = (value as { submit?: () => unknown | Promise<unknown> }) || undefined
         },

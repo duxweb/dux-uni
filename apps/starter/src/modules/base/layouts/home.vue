@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { resolveDuxConfig, useThemePreference } from '@duxweb/uni'
+import { resolveDuxConfig, resolveTabBarRenderer, useThemePreference } from '@duxweb/uni'
 import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
 import { computed } from 'vue'
 import duxConfig from '@/dux.config'
@@ -9,7 +9,7 @@ import AppTabbar from '../components/AppTabbar.vue'
 
 const dux = resolveDuxConfig(duxConfig)
 const { currentTheme } = useThemePreference()
-const customTabBar = computed(() => routerManifest.config.router.tabBarMode !== 'native')
+const customTabBar = computed(() => resolveTabBarRenderer(routerManifest.config.router) === 'custom')
 </script>
 
 <template>

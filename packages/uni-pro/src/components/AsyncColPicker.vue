@@ -2,6 +2,7 @@
 import type { Dict, UseTreeOptions } from '@duxweb/uni'
 import { computed, ref, useAttrs, watch } from 'vue'
 import { useTree } from '@duxweb/uni'
+import { useSanitizedAttrs } from '../attrs'
 
 defineOptions({
   inheritAttrs: false,
@@ -43,6 +44,7 @@ const emit = defineEmits<{
 }>()
 
 const attrs = useAttrs()
+const forwardedAttrs = useSanitizedAttrs(attrs)
 function getAttrValue<T = unknown>(name: string) {
   return attrs[name] as T
 }
@@ -325,7 +327,7 @@ defineExpose({
 
 <template>
   <wd-col-picker
-    v-bind="attrs"
+    v-bind="forwardedAttrs"
     :model-value="modelValue"
     :columns="columnsRef as any"
     :value-key="valueKey"

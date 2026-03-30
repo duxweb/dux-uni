@@ -2,6 +2,7 @@
 import type { Dict, UseSelectOptions } from '@duxweb/uni'
 import { computed, toRef, useAttrs } from 'vue'
 import { useSelect } from '@duxweb/uni'
+import { useSanitizedAttrs } from '../attrs'
 
 defineOptions({
   inheritAttrs: false,
@@ -30,6 +31,7 @@ const emit = defineEmits<{
 }>()
 
 const attrs = useAttrs()
+const forwardedAttrs = useSanitizedAttrs(attrs)
 
 const select = useSelect({
   path: toRef(props, 'path') as any,
@@ -65,7 +67,7 @@ defineExpose({
 
 <template>
   <wd-picker-view
-    v-bind="attrs"
+    v-bind="forwardedAttrs"
     :model-value="modelValue as any"
     :columns="columns as any"
     :loading="loading"

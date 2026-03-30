@@ -49,23 +49,41 @@ console.log(route.name, route.module, route.query)
 
 ## TabBar 约定
 
-模板默认支持自动推断 tabBar 模式：
+tabBar 现在拆成两层：
 
+- `router.tabBarMode`
+  - 决定底层导航行为
+  - `native` 时 tab 页走 `switchTab`
+  - `custom` 时 tab 页走 `reLaunch`
+- `router.tabBarRenderer`
+  - 决定界面上显示原生 tabbar 还是业务自定义 tabbar
+
+默认规则：
+
+- `tabBarMode` 默认优先按 `native` 处理
 - 如果存在 `src/modules/base/components/AppTabbar.vue`
-  - 视为自定义 tabBar
-  - `useRouter().to()` 对 tab 页走 `reLaunch`
+  - `tabBarRenderer` 会自动推断为 `custom`
 - 如果不存在该组件
-  - 视为原生 tabBar
-  - CLI 会生成 `pages.json.tabBar`
-  - `useRouter().to()` 对 tab 页走 `switchTab`
+  - `tabBarRenderer` 会自动推断为 `native`
 
-通常不需要手动配置 `router.tabBarMode`，只有在特殊场景下才作为覆盖项使用。
+当前 `template` 默认不内置 `AppTabbar.vue`，因此默认就是原生渲染。
 
-当前 `template` 默认不内置 `AppTabbar.vue`，因此默认就是原生 tabBar 模式。
+如果目标是小程序和 App 的正式一级导航，优先推荐：
 
-如果后续需要切成自定义悬浮 tabbar，只需要新增 `src/modules/base/components/AppTabbar.vue`，框架会自动切到自定义模式。
+```ts
+router: {
+  tabBarMode: 'native',
+}
+```
 
-如果目标是小程序和 App 的正式一级导航，优先推荐原生 tabBar。自定义 tabBar 更适合需要强视觉定制的项目。
+如果你要保留原生 tab 页缓存，但界面上使用自己的悬浮 tabbar，则使用：
+
+```ts
+router: {
+  tabBarMode: 'native',
+  tabBarRenderer: 'custom',
+}
+```
 
 ## 命令
 

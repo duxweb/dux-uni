@@ -37,9 +37,9 @@ async function submit() {
 <template>
   <view class="flex flex-col gap-8">
     <view class="flex flex-col gap-5">
-      <wd-tag plain custom-class="bg-white/12! text-white/80! border-white/25! w-fit!">
+      <view class="w-fit rounded-[999rpx] border border-white/25 bg-white/12 px-[18rpx] py-[8rpx] text-[22rpx] text-white/80">
         Dux Uni Template
-      </wd-tag>
+      </view>
       <view class="text-white text-[48rpx] font-bold leading-tight max-w-[620rpx]">
         从模板开始约束模块化结构、主题 token 和运行时边界
       </view>
@@ -55,20 +55,21 @@ async function submit() {
       </view>
 
       <view class="flex flex-col gap-5">
-        <wd-cell-group border custom-class="rounded-[24rpx]! overflow-hidden!">
-          <wd-input v-model="username" label="用户名" placeholder="请输入用户名" clearable />
-          <wd-input v-model="password" label="密码" placeholder="请输入密码" show-password />
-        </wd-cell-group>
+        <view class="overflow-hidden rounded-[24rpx]">
+          <wd-cell-group border>
+            <wd-input v-model="username" label="用户名" placeholder="请输入用户名" clearable />
+            <wd-input v-model="password" label="密码" placeholder="请输入密码" show-password />
+          </wd-cell-group>
+        </view>
 
         <wd-notice-bar
           v-if="errorMessage"
           type="danger"
           :text="errorMessage"
           :scrollable="false"
-          custom-class="rounded-[16rpx]!"
         />
 
-        <wd-button type="primary" block :loading="loginLoading" custom-class="rounded-[20rpx]!" @click="submit">
+        <wd-button type="primary" block :loading="loginLoading" @click="submit">
           {{ loginLoading ? '登录中...' : '进入模板' }}
         </wd-button>
       </view>

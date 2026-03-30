@@ -77,12 +77,21 @@ route.tabBar
 - native tabBar page: `switchTab`
 - custom tabBar page: `reLaunch`
 
-默认会自动识别 `tabBarMode`：
+`tabBarMode` 决定底层导航：
 
-- when `src/modules/base/components/AppTabbar.vue` exists, mode is `custom`
-- otherwise, mode is `native`
+- `native`: tab 页注册到 `pages.json`，切换走 `switchTab`
+- `custom`: tab 页按普通页面处理，切换走 `reLaunch`
 
-仍然可以手动指定 `router.tabBarMode`，但只建议作为高级覆盖配置。
+`tabBarRenderer` 决定界面渲染：
+
+- `native`: 使用平台原生 tabbar
+- `custom`: 继续使用业务层自定义 tabbar，但底层仍可配合 `native` 模式保留 tab 页缓存
+
+默认行为：
+
+- `tabBarMode`: `native`
+- when `src/modules/base/components/AppTabbar.vue` exists, `tabBarRenderer` is `custom`
+- otherwise, `tabBarRenderer` is `native`
 
 ### Custom TabBar Loading
 

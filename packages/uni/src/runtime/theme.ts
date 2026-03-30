@@ -4,6 +4,29 @@ import { createUniTheme } from '../dux/theme.ts'
 import { useThemeStore } from '../stores/theme.ts'
 
 export type UniResolvedTheme = 'light' | 'dark'
+export type UniThemePreferenceCapability = 'manual' | 'system-only'
+
+export function resolveUniPlatformSync() {
+  const getSystemInfoSync = (uni as typeof uni & {
+    getSystemInfoSync?: () => { uniPlatform?: string }
+  }).getSystemInfoSync
+
+  if (typeof getSystemInfoSync === 'function') {
+    return String(getSystemInfoSync().uniPlatform || '').toLowerCase()
+  }
+
+  return ''
+}
+
+export function resolveThemePreferenceCapabilitySync(): UniThemePreferenceCapability {
+  const platform = resolveUniPlatformSync()
+
+  if (platform === 'h5' || platform === 'web' || platform === 'app' || platform.startsWith('app-')) {
+    return 'manual'
+  }
+
+  return 'system-only'
+}
 
 export function resolveSystemThemeSync(): UniResolvedTheme {
   const appBase = (uni as typeof uni & {
@@ -61,7 +84,7 @@ export function installNativeThemeRuntime(context: UniAppContext) {
   const pinia = context.pinia as Parameters<typeof useThemeStore>[0] | undefined
 
   if (pinia && configuredMode !== 'system') {
-    useThemeStore(pinia).setThemePreference(configuredMode)
+    useThemeStore(pinia).setRuntimeThemePreference(configuredMode)
   }
 
   options.onSystemThemeChange?.(resolveSystemThemeSync(), context)

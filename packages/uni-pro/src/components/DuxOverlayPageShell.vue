@@ -136,11 +136,11 @@ defineExpose({
         <slot name="extra" />
         <view
           v-if="showCloseAction"
-          class="flex h-[56rpx] w-[56rpx] items-center justify-center rounded-full bg-neutral-faint"
+          class="flex h-[64rpx] w-[64rpx] items-center justify-center rounded-full bg-neutral-faint"
           hover-class="opacity-80"
           @click="close"
         >
-          <wd-icon name="close" size="18px" color="var(--dux-color-neutral-muted)" />
+          <wd-icon name="close" size="16px" color="var(--dux-color-neutral-muted)" />
         </view>
       </view>
     </view>

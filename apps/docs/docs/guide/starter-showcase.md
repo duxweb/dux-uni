@@ -56,6 +56,16 @@ system   => 系统页，例如 forbidden
 
 ## 一级导航
 
+当前 starter 的一级导航是：
+
+```text
+底层模式 => native tabBar
+渲染模式 => custom tabBar
+跳转行为 => useRouter().to() -> switchTab
+```
+
+也就是页面缓存和一级切换交给 uni 原生 tab 页，自定义视觉外观仍由 `AppTabbar.vue` 渲染。
+
 ### 首页
 
 ```text

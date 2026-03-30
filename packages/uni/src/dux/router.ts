@@ -71,18 +71,27 @@ function normalizePageMiddleware(page: DuxPageMeta) {
   return middlewares.length ? middlewares : undefined
 }
 
-function normalizePageTabBar(page: DuxPageMeta, mode: 'auto' | 'custom' | 'native') {
-  const resolvedMode = mode === 'auto' ? 'custom' : mode
+function normalizePageTabBar(
+  page: DuxPageMeta,
+  mode: 'auto' | 'custom' | 'native',
+  renderer: 'auto' | 'custom' | 'native',
+) {
+  const resolvedMode = mode === 'auto' ? 'native' : mode
+  const resolvedRenderer = renderer === 'auto'
+    ? resolvedMode === 'native' ? 'native' : 'custom'
+    : renderer
 
   if (typeof page.tabBar === 'object') {
     return {
       ...page.tabBar,
       mode: typeof page.tabBar.mode === 'string' ? page.tabBar.mode : resolvedMode,
+      renderer: typeof page.tabBar.renderer === 'string' ? page.tabBar.renderer : resolvedRenderer,
     }
   }
 
   return {
     mode: resolvedMode,
+    renderer: resolvedRenderer,
   }
 }
 
@@ -145,7 +154,11 @@ export function createDuxRouterManifestFromPages(rawPages: Array<Record<string, 
       ...page,
       middleware: normalizePageMiddleware(page),
       tabBar: tabBarPathSet.has(normalizePath(page.path))
-        ? normalizePageTabBar(page, config.router.tabBarMode || 'custom')
+        ? normalizePageTabBar(
+            page,
+            config.router.tabBarMode || 'auto',
+            config.router.tabBarRenderer || 'auto',
+          )
         : undefined,
     }
   })
@@ -170,6 +183,7 @@ export function createDuxRouterManifestFromPages(rawPages: Array<Record<string, 
       router: {
         ...config.router,
         tabBarMode: config.router.tabBarMode || 'auto',
+        tabBarRenderer: config.router.tabBarRenderer || 'auto',
       },
       ui: resolveUi(config),
     },

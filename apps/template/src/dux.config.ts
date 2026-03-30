@@ -11,6 +11,7 @@ export default defineDuxConfig({
     home: 'home.index',
     login: '/pages/auth/login',
     tabBar: ['home', 'account'],
+    tabBarMode: 'native',
   },
   ui: {
     theme: 'light',
@@ -21,6 +22,7 @@ export default defineDuxConfig({
       danger: '#b91c1c',
       background: '#f6fbfa',
       backgroundMuted: '#e6f6f3',
+      chrome: '#ffffff',
       surface: '#ffffff',
       surfaceMuted: '#ecfdf5',
       text: '#0f172a',

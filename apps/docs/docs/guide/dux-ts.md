@@ -15,6 +15,7 @@ export const dux = createUni(defineUniConfig({
   ...config.runtime,
   appName: config.app.name, // 应用名
   tabBarMode: routerManifest.config.router.tabBarMode, // 当前 tabBar 模式
+  tabBarRenderer: routerManifest.config.router.tabBarRenderer, // 当前 tabBar 渲染模式
   pages: routerManifest.pages, // 最终页面清单
   modules: config.modules, // 当前模块列表
 }))
@@ -274,6 +275,7 @@ export const dux = createUni(defineUniConfig({
   ...config.runtime,
   appName: config.app.name,
   tabBarMode: routerManifest.config.router.tabBarMode,
+  tabBarRenderer: routerManifest.config.router.tabBarRenderer,
   pages: routerManifest.pages,
   modules: config.modules,
   authProvider: simpleAuthProvider({
@@ -343,6 +345,7 @@ export const dux = createUni(defineUniConfig({
   ...config.runtime,
   appName: config.app.name,
   tabBarMode: routerManifest.config.router.tabBarMode,
+  tabBarRenderer: routerManifest.config.router.tabBarRenderer,
   pages: routerManifest.pages,
   modules: config.modules,
   request: {

@@ -3,6 +3,7 @@ import type { UniAppContext } from '../types'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { inject } from 'vue'
 import { syncRuntimeStores } from '../runtime/state'
+import { installNativeTabBarRuntime } from '../runtime/tabbar'
 import { installNativeThemeRuntime } from '../runtime/theme'
 
 export const UNI_APP_KEY: InjectionKey<UniAppContext> = Symbol('dux.uni')
@@ -69,6 +70,7 @@ export function installUniApp(app: {
   use: (...args: any[]) => unknown
   provide: (...args: any[]) => unknown
   component?: (name: string, component: unknown) => unknown
+  mixin?: (input: Record<string, unknown>) => unknown
 }, uni: UniAppContext, pinia?: unknown) {
   ensureAbortController()
   if (pinia) {
@@ -83,6 +85,7 @@ export function installUniApp(app: {
   })
   app.provide(UNI_APP_KEY, uni)
   app.provide('dux.uni', uni)
+  installNativeTabBarRuntime(app, uni.config)
   installNativeThemeRuntime(uni)
   void uni.ready.then(() => {
     syncRuntimeStores(uni)

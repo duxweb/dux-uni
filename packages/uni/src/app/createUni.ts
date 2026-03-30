@@ -15,6 +15,7 @@ import { createRouter } from '../runtime/router'
 import { createSessionManager } from '../runtime/session'
 import { createSocketManager } from '../runtime/socket'
 import { syncRuntimeStores } from '../runtime/state'
+import { navigateWithTabBarSupport } from '../runtime/tabbar'
 import { useAppStore } from '../stores/app'
 import { useAuthStore } from '../stores/auth'
 import { useSchemaStore } from '../stores/schema'
@@ -99,27 +100,8 @@ export function createUni(config: UniAppConfig): UniAppContext {
       || resolveHomePath(app)
   }
 
-  function resolveTabBarMode(page?: { tabBar?: boolean | Record<string, unknown> }) {
-    if (!page?.tabBar) {
-      return undefined
-    }
-    if (typeof page.tabBar === 'object' && typeof page.tabBar.mode === 'string') {
-      return page.tabBar.mode
-    }
-    return mergedConfig.tabBarMode || 'custom'
-  }
-
   async function navigateByTarget(app: UniAppContext, target: Parameters<typeof navigator.push>[0]) {
-    const resolved = app.router.resolve(target)
-    const page = app.router.getPageByPath(resolved) || app.router.getPageByTarget(target)
-
-    if (page?.tabBar) {
-      return resolveTabBarMode(page) === 'native'
-        ? await app.router.switchTab(target)
-        : await app.router.reLaunch(target)
-    }
-
-    return await app.router.push(target)
+    return await navigateWithTabBarSupport(app, target)
   }
 
   actions.register('navigate', async ({ app, payload }) => {

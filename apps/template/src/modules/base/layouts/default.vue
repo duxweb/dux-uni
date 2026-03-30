@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { resolveDuxConfig } from '@duxweb/uni'
+import { resolveDuxConfig, useThemePreference } from '@duxweb/uni'
 import DuxRoot from '@duxweb/uni-pro/components/DuxRoot.vue'
 import duxConfig from '@/dux.config'
 
 const dux = resolveDuxConfig(duxConfig)
+const { currentTheme } = useThemePreference()
 </script>
 
 <template>
-  <DuxRoot :theme="dux.ui.theme" :tokens="dux.ui.tokens">
+  <DuxRoot :theme="currentTheme" :tokens="dux.ui.tokens">
     <view
       class="relative min-h-screen overflow-hidden px-[28rpx] pt-[120rpx] pb-[40rpx]"
       :style="{

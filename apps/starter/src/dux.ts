@@ -21,6 +21,7 @@ export const dux = createUni(defineUniConfig({
   appName: config.app.name,
   overlayRegistry: OVERLAY_REGISTRY_COMPONENT_NAME,
   tabBarMode: routerManifest.config.router.tabBarMode,
+  tabBarRenderer: routerManifest.config.router.tabBarRenderer,
   pages: routerManifest.pages,
   modules: config.modules,
   schema: {

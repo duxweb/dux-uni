@@ -1,4 +1,4 @@
-import type { UniAppConfig, UniModuleManifest, UniPageMeta, UniTabBarMode } from '../types'
+import type { UniAppConfig, UniModuleManifest, UniPageMeta, UniTabBarMode, UniTabBarRenderer } from '../types'
 
 export interface DuxTabBarIcon {
   iconPath: string
@@ -64,6 +64,7 @@ export interface DuxRouterConfig {
   login: string
   tabBar: string[]
   tabBarMode?: UniTabBarMode
+  tabBarRenderer?: UniTabBarRenderer
 }
 
 export interface DuxAppMeta {

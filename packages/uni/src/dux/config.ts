@@ -17,6 +17,10 @@ function normalizePagePath(path: string) {
   return path.replace(/^\/+/, '')
 }
 
+function isSupportedNativeTabBarIcon(path?: string) {
+  return !!path && /\.(png|jpe?g)$/i.test(path)
+}
+
 function createPageWrapperPlaceholder(style?: Record<string, unknown>) {
   const current = style?.componentPlaceholder
   const placeholders = current && typeof current === 'object'
@@ -105,7 +109,7 @@ export function resolveDuxConfig(config: DuxConfig): ResolvedDuxConfig {
             }
             const store = useThemeStore(pinia)
             if (runtimeThemeMode !== 'system') {
-              store.setThemePreference(runtimeThemeMode)
+              store.setRuntimeThemePreference(runtimeThemeMode)
             }
             store.setSystemTheme(theme)
           }),
@@ -119,6 +123,7 @@ export function resolveDuxConfig(config: DuxConfig): ResolvedDuxConfig {
     router: {
       ...config.router,
       tabBarMode: config.router.tabBarMode || 'auto',
+      tabBarRenderer: config.router.tabBarRenderer || 'auto',
     },
     ui: {
       library: config.ui?.library || 'wot',
@@ -175,6 +180,7 @@ export function createUniTabBar(config: DuxConfig, pages: Array<Record<string, u
   const useThemeVars = isAutoTheme(manifest.config.ui.theme)
   const fixedTheme = createUniTheme(manifest.config.ui.tokens)[resolveFixedTheme(manifest.config.ui.theme)]
   const borderStyle: 'black' | 'white' = useThemeVars ? 'black' : fixedTheme.tabBorderStyle === 'white' ? 'white' : 'black'
+  const shouldIncludeIcons = manifest.config.router.tabBarRenderer === 'native'
 
   return {
     color: useThemeVars ? '@tabFontColor' : fixedTheme.tabFontColor,
@@ -184,8 +190,12 @@ export function createUniTabBar(config: DuxConfig, pages: Array<Record<string, u
     list: items.map((page) => ({
       pagePath: normalizePagePath(page.path),
       text: page.title || page.name,
-      iconPath: page.tabBarIcon?.iconPath,
-      selectedIconPath: page.tabBarIcon?.selectedIconPath,
+      ...(shouldIncludeIcons && isSupportedNativeTabBarIcon(page.tabBarIcon?.iconPath)
+        ? { iconPath: page.tabBarIcon?.iconPath }
+        : {}),
+      ...(shouldIncludeIcons && isSupportedNativeTabBarIcon(page.tabBarIcon?.selectedIconPath)
+        ? { selectedIconPath: page.tabBarIcon?.selectedIconPath }
+        : {}),
     })),
   }
 }

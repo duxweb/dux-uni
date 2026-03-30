@@ -1,10 +1,6 @@
 <route lang="json">
 {
-  "title": "账户",
-  "tabBarIcon": {
-    "iconPath": "static/tabbar/account.svg",
-    "selectedIconPath": "static/tabbar/account-active.svg"
-  }
+  "title": "账户"
 }
 </route>
 
@@ -19,7 +15,7 @@ const toast = useToast()
 const auth = useAuth()
 const router = useRouter()
 const authStore = useAuthStore()
-const { themePreference, systemTheme, cycleThemePreference } = useThemePreference()
+const { themePreference, canSetThemePreference, systemTheme, cycleThemePreference } = useThemePreference()
 const isLogin = computed(() => Boolean(auth.value?.token))
 const checkAction = useCheck()
 const currentUserResult = ref<unknown>(null)
@@ -97,6 +93,11 @@ function getCurrentUser() {
 }
 
 function toggleThemeMode() {
+  if (!canSetThemePreference.value) {
+    toast.show('当前平台仅支持跟随系统主题')
+    return
+  }
+
   cycleThemePreference()
   toast.show(`主题已切换为${themePreferenceLabel.value}`)
 }
@@ -161,10 +162,11 @@ const openLogin = wrapAsyncEvent('account.openLogin', async () => {
             界面主题
           </text>
           <text class="text-[22rpx] text-inverse-muted leading-[1.6]">
-            {{ themePreferenceLabel }}
+            {{ canSetThemePreference ? themePreferenceLabel : `跟随系统 (${systemTheme === 'dark' ? '深色' : '浅色'})` }}
           </text>
         </view>
         <view
+          v-if="canSetThemePreference"
           class="shrink-0 inline-flex items-center justify-center rounded-full border border-white/25 bg-glass-strong px-[28rpx] py-[14rpx]"
           hover-class="opacity-85"
           @click="toggleThemeMode"

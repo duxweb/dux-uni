@@ -2,11 +2,7 @@
 {
   "title": "首页",
   "auth": true,
-  "type": "home",
-  "tabBarIcon": {
-    "iconPath": "static/tabbar/home.svg",
-    "selectedIconPath": "static/tabbar/home-active.svg"
-  }
+  "type": "home"
 }
 </route>
 
@@ -29,9 +25,9 @@ const preferencesStore = useBasePreferencesStore()
   <view class="flex flex-col gap-[24rpx]">
     <view class="rounded-shell bg-[linear-gradient(135deg,#0f766e,#14b8a6)] px-[28rpx] py-[34rpx] text-white shadow-[0_18rpx_40rpx_rgba(15,118,110,0.18)]">
       <view class="flex flex-col gap-[10rpx]">
-        <wd-tag plain custom-class="bg-white/10! border-white/20! text-white/80! w-fit!">
+        <view class="w-fit rounded-[999rpx] border border-white/20 bg-white/10 px-[18rpx] py-[8rpx] text-[22rpx] text-white/80">
           Template App
-        </wd-tag>
+        </view>
         <text class="text-[44rpx] font-bold leading-tight">应用从模块开始组织，而不是从页面文件开始堆砌</text>
         <text class="text-[24rpx] text-white/80 leading-relaxed">
           当前账号：{{ String(profile.name || '未登录') }}，状态：{{ isLogin ? '已登录' : '未登录' }}。

@@ -3,6 +3,7 @@ import { onLoad, onShow } from '@dcloudio/uni-app'
 import { computed, onMounted, reactive } from 'vue'
 import { useDux } from '../app/install'
 import { getRuntimeStores, syncRuntimeStores } from '../runtime/state'
+import { navigateWithTabBarSupport } from '../runtime/tabbar'
 
 function resolveLoginPath(app: UniAppContext) {
   return app.router.getPageByName('login')?.path
@@ -35,16 +36,6 @@ function stringifyQuery(query: Record<string, string> = {}) {
 function createFullPath(path: string, query: Record<string, string> = {}) {
   const search = stringifyQuery(query)
   return search ? `${path}?${search}` : path
-}
-
-function resolveTabBarMode(app: UniAppContext, page?: { tabBar?: boolean | Record<string, unknown> }) {
-  if (!page?.tabBar) {
-    return undefined
-  }
-  if (typeof page.tabBar === 'object' && typeof page.tabBar.mode === 'string') {
-    return page.tabBar.mode
-  }
-  return app.config.tabBarMode || 'custom'
 }
 
 function resolveCurrentPageMeta(app: UniAppContext) {
@@ -83,16 +74,7 @@ export function useRouter(app?: UniAppContext) {
   }
 
   function to(target: Parameters<typeof navigator.push>[0]) {
-    const resolved = router.resolve(target)
-    const page = router.getPageByPath(resolved) || router.getPageByTarget(target)
-
-    if (page?.tabBar) {
-      return resolveTabBarMode(runtime, page) === 'native'
-        ? router.switchTab(target)
-        : router.reLaunch(target)
-    }
-
-    return router.push(target)
+    return navigateWithTabBarSupport(runtime, target)
   }
 
   return {

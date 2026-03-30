@@ -3,6 +3,7 @@ import type { Dict, UniUploadAsset } from '@duxweb/uni'
 import type { UploadFileItem } from 'wot-design-uni/components/wd-upload/types'
 import { computed, useAttrs } from 'vue'
 import { useUpload } from '@duxweb/uni'
+import { useSanitizedAttrs } from '../attrs'
 
 defineOptions({
   inheritAttrs: false,
@@ -47,6 +48,7 @@ const emit = defineEmits<{
 }>()
 
 const attrs = useAttrs()
+const forwardedAttrs = useSanitizedAttrs(attrs)
 
 const upload = useUpload({
   path: props.path,
@@ -141,7 +143,7 @@ defineExpose({
 
 <template>
   <wd-upload
-    v-bind="attrs"
+    v-bind="forwardedAttrs"
     :file-list="currentFileList"
     :action="resolvedAction"
     :header="headers"

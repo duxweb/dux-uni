@@ -66,6 +66,7 @@ export const dux = createUni(defineUniConfig({
   ...config.runtime,
   appName: config.app.name,
   tabBarMode: routerManifest.config.router.tabBarMode,
+  tabBarRenderer: routerManifest.config.router.tabBarRenderer,
   pages: routerManifest.pages,
   modules: config.modules,
   permission: {

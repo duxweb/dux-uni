@@ -139,7 +139,7 @@ async function handleChange(event: unknown) {
   try {
     navigating.value = true
     activeName.value = item.name
-    await router.reLaunch(item.path)
+    await router.to(item.path)
   }
   catch (error) {
     activeName.value = resolveActiveName(currentPath.value)

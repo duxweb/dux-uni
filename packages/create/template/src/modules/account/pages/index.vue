@@ -1,11 +1,7 @@
 <route lang="json">
 {
   "title": "账户",
-  "auth": true,
-  "tabBarIcon": {
-    "iconPath": "static/tabbar/account.svg",
-    "selectedIconPath": "static/tabbar/account-active.svg"
-  }
+  "auth": true
 }
 </route>
 
@@ -33,11 +29,13 @@ const logoutAction = useLogout({
           模板默认只内置最基础的登录态和权限展示。
         </text>
       </view>
-      <wd-cell-group border custom-class="rounded-[24rpx]! overflow-hidden!">
-        <wd-cell title="登录状态" :value="isLogin ? '已登录' : '未登录'" />
-        <wd-cell title="用户名称" :value="String(auth.value?.user?.name || '未设置')" />
-        <wd-cell title="Token" :value="String(auth.value?.token || '无')" />
-      </wd-cell-group>
+      <view class="overflow-hidden rounded-[24rpx]">
+        <wd-cell-group border>
+          <wd-cell title="登录状态" :value="isLogin ? '已登录' : '未登录'" />
+          <wd-cell title="用户名称" :value="String(auth.value?.user?.name || '未设置')" />
+          <wd-cell title="Token" :value="String(auth.value?.token || '无')" />
+        </wd-cell-group>
+      </view>
     </view>
 
     <view class="rounded-card bg-surface p-page shadow-[0_12rpx_32rpx_rgba(15,23,42,0.06)]">

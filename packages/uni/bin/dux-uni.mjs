@@ -55,6 +55,13 @@ function inferTabBarMode(rootDir, config) {
   if (config.router?.tabBarMode === 'custom' || config.router?.tabBarMode === 'native') {
     return config.router.tabBarMode
   }
+  return 'native'
+}
+
+function inferTabBarRenderer(rootDir, config) {
+  if (config.router?.tabBarRenderer === 'custom' || config.router?.tabBarRenderer === 'native') {
+    return config.router.tabBarRenderer
+  }
 
   const customTabbarFiles = [
     resolve(rootDir, 'src/modules/base/components/AppTabbar.vue'),
@@ -223,7 +230,16 @@ function renderSchemaComponentProxy(input) {
     </template>`).join('\n')
   const slotBlock = slotTemplates ? `\n${slotTemplates}` : ''
 
-  return `<script lang="ts">
+  return `<script setup lang="ts">
+import { computed, useAttrs } from 'vue'
+
+const attrs = useAttrs()
+const forwardedAttrs = computed(() => Object.fromEntries(
+  Object.entries(attrs).filter(([key, value]) => value !== undefined && key !== 'virtualHostStyle' && key !== 'virtualHostClass'),
+))
+</script>
+
+<script lang="ts">
 export default {
   name: '${componentName}Proxy',
   inheritAttrs: false,
@@ -231,7 +247,7 @@ export default {
 </script>
 
 <template>
-  <${name} v-bind="$attrs">
+  <${name} v-bind="forwardedAttrs">
     <slot />${slotBlock}
   </${name}>
 </template>
@@ -543,6 +559,7 @@ async function syncProject(rootDir) {
   duxConfig.router = {
     ...duxConfig.router,
     tabBarMode: inferTabBarMode(rootDir, duxConfig),
+    tabBarRenderer: inferTabBarRenderer(rootDir, duxConfig),
   }
 
   const modules = sortModules(scanDuxModulesSync({

@@ -11,6 +11,7 @@ export default defineDuxConfig({
     home: 'home.index',
     login: '/pages/auth/login',
     tabBar: ['home', 'account'],
+    tabBarMode: 'native',
   },
   ui: {
     theme: 'light',

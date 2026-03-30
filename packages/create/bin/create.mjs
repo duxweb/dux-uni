@@ -636,11 +636,7 @@ const dux = resolveDuxConfig(duxConfig)
 {
   "title": "首页",
   "auth": true,
-  "type": "home",
-  "tabBarIcon": {
-    "iconPath": "static/tabbar/home.svg",
-    "selectedIconPath": "static/tabbar/home-active.svg"
-  }
+  "type": "home"
 }
 </route>
 
@@ -794,11 +790,7 @@ async function submit() {
   writeFileSync(accountPagePath, `<route lang="json">
 {
   "title": "账户",
-  "auth": true,
-  "tabBarIcon": {
-    "iconPath": "static/tabbar/account.svg",
-    "selectedIconPath": "static/tabbar/account-active.svg"
-  }
+  "auth": true
 }
 </route>
 

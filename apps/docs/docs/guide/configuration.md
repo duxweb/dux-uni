@@ -48,8 +48,15 @@ router: {
   login: 'auth.login', // 登录页
   tabBar: ['home', 'account'], // 一级 tabBar 模块
   tabBarMode: 'auto', // auto / native / custom
+  tabBarRenderer: 'auto', // auto / native / custom
 }
 ```
+
+- `tabBarMode`
+  决定底层导航是走 `switchTab` 还是 `reLaunch`
+- `tabBarRenderer`
+  决定界面上显示原生 tabbar 还是业务自定义 tabbar
+- 推荐移动端一级导航使用 `tabBarMode: 'native'`，如果需要自定义外观，再配 `tabBarRenderer: 'custom'`
 
 推荐优先写页面名：
 

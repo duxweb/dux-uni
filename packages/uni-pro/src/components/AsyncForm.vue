@@ -2,6 +2,7 @@
 import type { Dict, UniFormRule, UseFormSubmitResult } from '@duxweb/uni'
 import { computed, ref, useAttrs, watch } from 'vue'
 import { useCreate, useForm, useOne, useUpdate } from '@duxweb/uni'
+import { useSanitizedAttrs } from '../attrs'
 
 defineOptions({
   inheritAttrs: false,
@@ -49,6 +50,7 @@ const emit = defineEmits<{
 }>()
 
 const attrs = useAttrs()
+const forwardedAttrs = useSanitizedAttrs(attrs)
 const formRef = ref<{
   validate?: (prop?: string | string[]) => Promise<{ valid: boolean, errors: Array<{ prop: string, message: string }> }>
   reset?: () => void
@@ -271,7 +273,7 @@ defineExpose({
 <template>
   <wd-form
     ref="formRef"
-    v-bind="attrs"
+    v-bind="forwardedAttrs"
     :model="form.values"
   >
     <slot

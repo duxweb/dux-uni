@@ -197,6 +197,7 @@ import { useThemePreference } from '@duxweb/uni'
 
 const {
   themePreference,
+  canSetThemePreference,
   systemTheme,
   currentTheme,
   setThemePreference,
@@ -208,6 +209,8 @@ const {
 
 - `themePreference`
   用户当前设置的模式：`system / light / dark`
+- `canSetThemePreference`
+  当前平台是否支持手动切换应用主题。不支持时应只展示“跟随系统”。
 - `systemTheme`
   当前设备探测到的系统模式：`light / dark`
 - `currentTheme`

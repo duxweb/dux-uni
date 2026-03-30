@@ -8,6 +8,8 @@ export const useThemePreference = createSharedComposable(() => {
   return {
     themeStore,
     themePreference: computed(() => themeStore.themePreference),
+    themePreferenceCapability: computed(() => themeStore.themePreferenceCapability),
+    canSetThemePreference: computed(() => themeStore.canSetThemePreference),
     systemTheme: computed(() => themeStore.systemTheme),
     currentTheme: computed(() => themeStore.resolvedTheme),
     setThemePreference: (value: 'system' | 'light' | 'dark') => themeStore.setThemePreference(value),
